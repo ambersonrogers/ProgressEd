@@ -28,9 +28,7 @@ function Login({ onLogin }) {
             localStorage.setItem('user', JSON.stringify(response.data.user));
             onLogin(response.data.user);
         } catch (err) {
-            console.error('❌ Erro ao fazer login:', err);
-            console.error('Response:', err.response);
-            setError(err.response?.data?.error || err.message || 'Erro na conexão');
+            setError(err.response?.data?.error || 'Erro na conexão');
         } finally {
             setLoading(false);
         }
