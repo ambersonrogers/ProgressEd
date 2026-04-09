@@ -1,0 +1,45 @@
+{
+  "name": "progressd-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "ProgressEd - Plataforma educacional gamificada (Frontend)",
+  "author": "ProgressEd Team",
+  "scripts": {
+    "dev": "vite",
+    "dev:desktop": "set VITE_PLATFORM=desktop && vite",
+    "dev:mobile": "set VITE_PLATFORM=mobile && vite",
+    "build": "vite build",
+    "build:desktop": "set VITE_PLATFORM=desktop && vite build",
+    "build:mobile": "set VITE_PLATFORM=mobile && vite build",
+    "build:prod": "set NODE_ENV=production && vite build",
+    "build:docker": "docker build -f Dockerfile.frontend -t progressd-frontend:latest .",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "preview": "vite preview",
+    "serve": "vite preview --port 4173",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "axios": "^1.14.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.14.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "esbuild": "^0.28.0",
+    "globals": "^17.4.0",
+    "vite": "^8.0.4"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

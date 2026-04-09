@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#667eea" />
+    <meta name="description" content="ProgressEd - Plataforma de aprendizado gamificada com desafios interativos e ranking competitivo" />
+    <meta name="keywords" content="educação, gamificação, aprendizado, desafios, quiz" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="ProgressEd" />
+    <meta name="msapplication-TileColor" content="#667eea" />
+    <meta property="og:title" content="ProgressEd - Aprenda Jogando" />
+    <meta property="og:description" content="Plataforma educacional com gamificação, desafios e ranking" />
+    <meta property="og:image" content="/progressd-og.png" />
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23667eea' width='192' height='192'/><text x='50%' y='50%' font-size='100' fill='white' text-anchor='middle' dominant-baseline='middle' font-weight='bold'>PE</text></svg>" />
+    
+    <title>ProgressEd - Aprenda Jogando</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+              console.log('Service Worker registrado com sucesso:', registration);
+            })
+            .catch(error => {
+              console.error('Erro ao registrar Service Worker:', error);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>

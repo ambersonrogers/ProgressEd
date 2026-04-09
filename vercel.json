@@ -2,13 +2,13 @@
   "version": 2,
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
+  "env": {
+    "VITE_API_URL": "https://progressed-backend-production.up.railway.app"
+  },
   "routes": [
     {
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "env": {
-    "VITE_API_URL": "https://progressed-backend-production.up.railway.app"
-  }
+  ]
 }
