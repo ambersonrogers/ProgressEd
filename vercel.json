@@ -5,8 +5,8 @@
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "outputDirectory": "frontend/dist",
-        "buildCommand": "npm --prefix frontend run build"
+        "outputDirectory": "dist",
+        "buildCommand": "npm run build"
       }
     }
   ],
