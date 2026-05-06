@@ -1,0 +1,170 @@
+.student-sidebar {
+  width: 260px;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1.25rem;
+  z-index: 10;
+  height: 100vh;
+}
+
+.student-sidebar .sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 3rem;
+  color: white;
+}
+
+.logo-icon {
+  width: 28px;
+  height: 28px;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.student-sidebar .sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.student-sidebar .nav-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.student-sidebar .nav-item:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.student-sidebar .nav-item.active {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--primary-neon);
+  border-left: none;
+  position: relative;
+}
+
+.student-sidebar .nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10%;
+  height: 80%;
+  width: 4px;
+  background: var(--primary-neon);
+  border-radius: 0 4px 4px 0;
+}
+
+.sidebar-streak {
+  margin-top: auto;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-light);
+  border-radius: 1rem;
+  padding: 1.25rem;
+}
+
+.streak-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.streak-title {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.streak-days {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: white;
+}
+
+.streak-calendar {
+  display: flex;
+  justify-content: space-between;
+}
+
+.streak-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.day-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+/* Responsiveness */
+@media (max-width: 768px) {
+  .student-sidebar {
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    padding: 1rem;
+    align-items: center;
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .student-sidebar .sidebar-logo {
+    margin-bottom: 0;
+    margin-right: 2rem;
+  }
+
+  .student-sidebar .sidebar-nav {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .student-sidebar .nav-item {
+    padding: 0.5rem 1rem;
+  }
+
+  .student-sidebar .nav-item.active::before {
+    top: auto;
+    bottom: -1rem;
+    left: 10%;
+    width: 80%;
+    height: 4px;
+    border-radius: 4px 4px 0 0;
+  }
+
+  .sidebar-streak {
+    display: none; /* Hide streak on mobile for space */
+  }
+}
+
+@media (max-width: 480px) {
+  .student-sidebar .nav-item span {
+    display: none; /* Hide text, only show icons */
+  }
+}
