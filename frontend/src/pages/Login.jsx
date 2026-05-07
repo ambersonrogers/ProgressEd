@@ -84,10 +84,8 @@ function Login({ onLogin }) {
     };
 
     useEffect(() => {
-        const savedTheme = localStorage.getItem('selectedTheme');
-        if (savedTheme) {
-            document.documentElement.dataset.theme = savedTheme;
-        }
+        document.documentElement.dataset.theme = 'cyber';
+        localStorage.setItem('selectedTheme', 'cyber');
     }, []);
 
     return (

@@ -32,13 +32,7 @@ function StudentDashboard({ user, onLogout }) {
     const [randomMode, setRandomMode] = useState(false);
     const [randomChallengeId, setRandomChallengeId] = useState(null);
     const [selectedLanguage, setSelectedLanguage] = useState(() => localStorage.getItem('selectedLanguage') || 'JavaScript');
-    const [selectedTheme, setSelectedTheme] = useState(() => localStorage.getItem('selectedTheme') || 'school');
-
-    const availableThemes = [
-        { id: 'school', label: 'Escola' },
-        { id: 'cyber', label: 'Cyber' },
-        { id: 'adventure', label: 'Aventura' },
-    ];
+    const [selectedTheme, setSelectedTheme] = useState('cyber');
 
     const iconMap = {
         CheckCircle2, Code2, Database, Activity, BrainCircuit, Lock, TrophyIcon
@@ -62,9 +56,9 @@ function StudentDashboard({ user, onLogout }) {
     }, [challenges, selectedSubjects]);
 
     useEffect(() => {
-        document.documentElement.dataset.theme = selectedTheme;
-        localStorage.setItem('selectedTheme', selectedTheme);
-    }, [selectedTheme]);
+        document.documentElement.dataset.theme = 'cyber';
+        localStorage.setItem('selectedTheme', 'cyber');
+    }, []);
 
     const loadUserProfile = async () => {
         try {
@@ -513,21 +507,7 @@ function StudentDashboard({ user, onLogout }) {
                                             ))}
                                         </select>
                                     </div>
-                                    <div>
-                                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Tema visual</label>
-                                        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                                            {availableThemes.map(theme => (
-                                                <button
-                                                    key={theme.id}
-                                                    type="button"
-                                                    className={`btn ${selectedTheme === theme.id ? 'btn-primary' : 'btn-outline'}`}
-                                                    onClick={() => handleThemeChange(theme.id)}
-                                                >
-                                                    {theme.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
+                                    {/* Removed theme selector */}
                                 </div>
                             </div>
                         )}

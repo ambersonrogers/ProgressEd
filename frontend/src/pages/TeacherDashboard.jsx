@@ -21,10 +21,8 @@ function TeacherDashboard({ user, onLogout }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const savedTheme = localStorage.getItem('selectedTheme');
-        if (savedTheme) {
-            document.documentElement.dataset.theme = savedTheme;
-        }
+        document.documentElement.dataset.theme = 'cyber';
+        localStorage.setItem('selectedTheme', 'cyber');
         loadData();
     }, []);
 
