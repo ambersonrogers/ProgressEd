@@ -1,35 +1,27 @@
-import { useState } from 'react';
-import Login from './pages/Login';
-import StudentDashboard from './pages/StudentDashboard';
-import TeacherDashboard from './pages/TeacherDashboard';
-import './index.css';
+import { GameProvider, useGame } from './context/GameContext';
+import LoginPage from './pages/LoginPage';
+import HomePage from './pages/HomePage';
+import SubjectSelectPage from './pages/SubjectSelectPage';
+import GamePage from './pages/GamePage';
+import ResultPage from './pages/ResultPage';
+import TeacherPage from './pages/TeacherPage';
 
-function App() {
-    const [user, setUser] = useState(() => {
-        const savedUser = localStorage.getItem('user');
-        const token = localStorage.getItem('token');
-        return savedUser && token ? JSON.parse(savedUser) : null;
-    });
+function AppRouter() {
+  const { state } = useGame();
+  const { user, screen } = state;
 
-    const handleLogin = (userData) => {
-        setUser(userData);
-    };
-
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setUser(null);
-    };
-
-    if (!user) {
-        return <Login onLogin={handleLogin} />;
-    }
-
-    if (user.role === 'teacher') {
-        return <TeacherDashboard user={user} onLogout={handleLogout} />;
-    }
-
-    return <StudentDashboard user={user} onLogout={handleLogout} />;
+  if (!user) return <LoginPage />;
+  if (screen === 'teacher') return <TeacherPage />;
+  if (screen === 'subject-select') return <SubjectSelectPage />;
+  if (screen === 'game') return <GamePage />;
+  if (screen === 'result') return <ResultPage />;
+  return <HomePage />;
 }
 
-export default App;
+export default function App() {
+  return (
+    <GameProvider>
+      <AppRouter />
+    </GameProvider>
+  );
+}
