@@ -1,10 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const http = require('http');
 
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
@@ -15,17 +17,23 @@ const challengeRoutes = require('./routes/challenges');
 const userRoutes = require('./routes/users');
 const teacherRoutes = require('./routes/teacher');
 const rankingRoutes = require('./routes/ranking');
-app.use('/api/teacher', teacherRoutes);
+const analyticsRoutes = require('./routes/analytics');
 
+app.use('/api/teacher', teacherRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/challenges', challengeRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/ranking', rankingRoutes);
+app.use('/api/analytics', analyticsRoutes);
+
+// Inicializar Socket.io
+const { initializeSocket } = require('./socketHandler');
+initializeSocket(server);
 
 app.get('/', (req, res) => {
     res.json({ message: 'API do ProgressEd está rodando!' });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor ProgressEd rodando na porta ${PORT} (aceitando conexões externas)`);
 });

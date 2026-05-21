@@ -104,10 +104,10 @@ INSERT INTO challenges (question, option_a, option_b, option_c, option_d, correc
 ('How do you say "obrigado" in English?', 'Please', 'Thank you', 'Sorry', 'Hello', 'B', 10, 1, 'Inglês', 1),
 ('What is the past tense of "go"?', 'Goed', 'Went', 'Gone', 'Going', 'B', 15, 1, 'Inglês', 1),
 ('Which article is correct: "___ apple" or "___ apple"?', 'A / An', 'An / A', 'The / A', 'A / The', 'B', 15, 2, 'Inglês', 2),
-('Which word is a synonym for "beautiful"?', 'Ugly', 'Pretty', 'Sad', 'Angry', 'B', 10, 1, 'Inglês', 2),
+('What does "beautiful" mean?', 'Feio', 'Bonito', 'Triste', 'Bravo', 'B', 10, 1, 'Inglês', 2),
 ('Choose the correct sentence:', 'I go to school yesterday', 'I went to school yesterday', 'I will go to school yesterday', 'I going to school yesterday', 'B', 15, 2, 'Inglês', 3),
 ('What is the plural of "child"?', 'Childs', 'Children', 'Childes', 'Childrens', 'B', 15, 2, 'Inglês', 3),
-('Which meal is eaten in the morning?', 'Lunch', 'Dinner', 'Breakfast', 'Snack', 'C', 10, 1, 'Inglês', 4),
+('What does "breakfast" mean?', 'Almoço', 'Jantar', 'Café da manhã', 'Lanche', 'C', 10, 1, 'Inglês', 4),
 ('Choose the correct preposition: "I live ___ Brazil"', 'at', 'on', 'in', 'to', 'C', 15, 2, 'Inglês', 4),
 ('What is the comparative of "good"?', 'Gooder', 'Better', 'Best', 'More good', 'B', 15, 2, 'Inglês', 4);
 

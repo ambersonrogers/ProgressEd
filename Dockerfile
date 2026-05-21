@@ -1,47 +1,63 @@
-# Multi-stage build para ProgressEd
+# Multi-stage build para otimização
 
-# Stage 1: Build da aplicação frontend
-FROM node:18-alpine as frontend-builder
+# Stage 1: Build Frontend
+FROM node:22-alpine AS frontend-builder
 WORKDIR /app/frontend
 
 COPY frontend/package*.json ./
-RUN npm install
+RUN npm ci --only=production && npm ci
 
-COPY frontend/ ./
+COPY frontend/ .
 RUN npm run build
 
-# Stage 2: Build da aplicação backend
-FROM node:18-alpine as backend-builder
+# Stage 2: Build Backend
+FROM node:22-alpine AS backend-builder
 WORKDIR /app/backend
 
 COPY backend/package*.json ./
-RUN npm install --production
+RUN npm ci --only=production
 
-# Stage 3: Imagem final
-FROM node:18-alpine
-
-# Instalar dumb-init para melhor gerenciamento de processos
-RUN apk add --no-cache dumb-init
+# Stage 3: Production Runtime
+FROM node:22-alpine
 
 WORKDIR /app
 
-# Copiar frontend buildado
-COPY --from=frontend-builder /app/frontend/dist ./frontend/public
+# Instalar dependências do sistema
+RUN apk add --no-cache curl dumb-init tini
 
 # Copiar backend
-COPY --from=backend-builder /app/backend/node_modules ./backend/node_modules
 COPY backend/ ./backend/
+COPY backend/package*.json ./backend/
 
+# Copiar frontend build
+COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
+
+# Instalar dependências de produção
 WORKDIR /app/backend
+RUN npm ci --only=production
 
-# Variáveis de ambiente
-ENV NODE_ENV=production
-ENV PORT=5000
+# Criar usuário não-root
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+
+# Mudar permissões
+RUN chown -R nodejs:nodejs /app
+
+USER nodejs
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:5000/', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:5000/health || exit 1
 
-# Usar dumb-init para executar Node.js corretamente
-ENTRYPOINT ["dumb-init", "--"]
+# Usar dumb-init para gerenciar sinais
+ENTRYPOINT ["/sbin/dumb-init", "--"]
+
+# Iniciar aplicação
 CMD ["node", "server.js"]
+
+# Expor porta
+EXPOSE 5000
+
+# Labels
+LABEL maintainer="ProgressEd Team"
+LABEL version="1.0.0"
+LABEL description="ProgressEd - Plataforma Educacional Gamificada"

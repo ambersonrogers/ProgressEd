@@ -1,47 +1,48 @@
 import { useState, useEffect, useMemo } from 'react';
-import StudentSidebar from '../components/StudentSidebar';
 import ChallengeCard from '../components/ChallengeCard';
-import { Bell, ChevronRight, CheckCircle2, Lock, Edit3, Star, Clock, Trophy, Map, BrainCircuit, Activity, Database, Code2 } from 'lucide-react';
 import api from '../services/api';
-import { learningPath as rawLearningPath } from '../services/mockData';
 import './StudentDashboard.css';
 
-function TrophyIcon(props) {
-  return (
-    <svg {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-      <path d="M4 22h16"></path>
-      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
-      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
-      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
-    </svg>
-  );
-}
-
 function StudentDashboard({ user, onLogout }) {
-    const [activeTab, setActiveTab] = useState('Trilhas');
     const [challenges, setChallenges] = useState([]);
     const [currentChallengeIndex, setCurrentChallengeIndex] = useState(0);
     const [loading, setLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState(user);
     const [completedChallenges, setCompletedChallenges] = useState(new Set());
+    const [showStats, setShowStats] = useState(false);
+    const [showRanking, setShowRanking] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
     const [ranking, setRanking] = useState([]);
     const [selectedSubjects, setSelectedSubjects] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [randomMode, setRandomMode] = useState(false);
     const [randomChallengeId, setRandomChallengeId] = useState(null);
     const [selectedLanguage, setSelectedLanguage] = useState(() => localStorage.getItem('selectedLanguage') || 'JavaScript');
-    const [selectedTheme, setSelectedTheme] = useState('cyber');
+    const [selectedTheme, setSelectedTheme] = useState(() => localStorage.getItem('selectedTheme') || 'school');
 
-    const iconMap = {
-        CheckCircle2, Code2, Database, Activity, BrainCircuit, Lock, TrophyIcon
+    const availableThemes = [
+        { id: 'school', label: 'Escola' },
+        { id: 'cyber', label: 'Cyber' },
+        { id: 'adventure', label: 'Aventura' },
+    ];
+
+    const handleThemeChange = (themeId) => {
+        setSelectedTheme(themeId);
     };
 
-    const learningPath = rawLearningPath.map(node => ({
-        ...node,
-        icon: iconMap[node.iconName]
-    }));
+    useEffect(() => {
+        const savedLanguage = localStorage.getItem('selectedLanguage');
+        if (savedLanguage) {
+            setSelectedLanguage(savedLanguage);
+        }
+    }, []);
+
+    const availableLanguages = ['JavaScript', 'Python', 'Java', 'C#', 'Ruby', 'HTML/CSS'];
+
+    const handleLanguageChange = (language) => {
+        setSelectedLanguage(language);
+        localStorage.setItem('selectedLanguage', language);
+    };
 
     useEffect(() => {
         loadChallenges();
@@ -56,9 +57,9 @@ function StudentDashboard({ user, onLogout }) {
     }, [challenges, selectedSubjects]);
 
     useEffect(() => {
-        document.documentElement.dataset.theme = 'cyber';
-        localStorage.setItem('selectedTheme', 'cyber');
-    }, []);
+        document.documentElement.dataset.theme = selectedTheme;
+        localStorage.setItem('selectedTheme', selectedTheme);
+    }, [selectedTheme]);
 
     const loadUserProfile = async () => {
         try {
@@ -66,7 +67,7 @@ function StudentDashboard({ user, onLogout }) {
             setCurrentUser(response.data);
             localStorage.setItem('user', JSON.stringify(response.data));
         } catch (error) {
-            console.warn('Backend indisponível para profile. Usando mock ou storage.');
+            console.error('Erro ao carregar perfil:', error);
         }
     };
 
@@ -75,13 +76,7 @@ function StudentDashboard({ user, onLogout }) {
             const response = await api.get('/ranking');
             setRanking(response.data);
         } catch (error) {
-            console.warn('Backend indisponível para ranking. Usando mock.');
-            setRanking([
-                { id: 1, name: 'Lucas Mendes', xp: 3250, level: 8 },
-                { id: 2, name: 'Mariana Silva', xp: 2980, level: 7 },
-                { id: 3, name: 'Pedro Henrique', xp: 2750, level: 7 },
-                { id: currentUser?.id || 99, name: currentUser?.name || 'Você', xp: currentUser?.xp || 2450, level: currentUser?.level || 5 }
-            ].sort((a, b) => b.xp - a.xp));
+            console.error('Erro ao carregar ranking:', error);
         }
     };
 
@@ -90,25 +85,10 @@ function StudentDashboard({ user, onLogout }) {
             const response = await api.get('/challenges');
             setChallenges(response.data);
         } catch (error) {
-            console.warn('Backend indisponível para desafios. Simulando array vazio.');
-            setChallenges([]);
+            console.error('Erro ao carregar desafios:', error);
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleNodeClick = (node) => {
-        if (node.status === 'locked') return;
-        setActiveTab('Desafios');
-    };
-
-    const handleThemeChange = (themeId) => {
-        setSelectedTheme(themeId);
-    };
-
-    const handleLanguageChange = (language) => {
-        setSelectedLanguage(language);
-        localStorage.setItem('selectedLanguage', language);
     };
 
     const getRandomChallengeId = (list, excludeId = null) => {
@@ -144,22 +124,8 @@ function StudentDashboard({ user, onLogout }) {
             }, 1000);
 
         } catch (error) {
-            console.warn('Erro na API ao submeter desafio. Simulando sucesso.');
-            setCompletedChallenges(prev => new Set([...prev, challengeId]));
-            setCurrentUser(prev => ({ ...prev, xp: prev.xp + 10 }));
-            
-            setTimeout(() => {
-                if (randomMode) {
-                    setRandomChallengeId(getRandomChallengeId(filteredChallenges, challengeId));
-                } else {
-                    setCurrentChallengeIndex(prevIndex => {
-                        if (prevIndex < filteredChallenges.length - 1) {
-                            return prevIndex + 1;
-                        }
-                        return 0;
-                    });
-                }
-            }, 1000);
+            console.error('Erro ao submeter desafio:', error);
+            alert('Erro ao enviar resposta. Tente novamente.');
         }
     };
 
@@ -189,12 +155,8 @@ function StudentDashboard({ user, onLogout }) {
         const userXp = currentUser?.xp || 0;
         const xpInCurrentLevel = userXp - currentLevelXp;
         const xpNeeded = nextLevelXp - currentLevelXp;
-        return { 
-            xpToNext: nextLevelXp - userXp, 
-            xpNeeded, 
-            xpInCurrentLevel,
-            progressPercent: (xpInCurrentLevel / xpNeeded) * 100 
-        };
+        const xpToNext = nextLevelXp - userXp;
+        return { xpToNext, xpNeeded, xpInCurrentLevel };
     };
 
     const subjects = useMemo(() => {
@@ -244,12 +206,20 @@ function StudentDashboard({ user, onLogout }) {
         setSelectedSubjects(new Set());
     };
 
+    const getLevelBadge = () => {
+        const level = currentUser?.level || 1;
+        if (level >= 10) return '👑';
+        if (level >= 8) return '🥇';
+        if (level >= 5) return '🔥';
+        return '⭐';
+    };
+
     if (loading) {
         return (
-            <div className="dashboard-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-main)' }}>
-                <div style={{ color: 'var(--primary-neon)', fontSize: '1.2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-                    <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--primary-neon)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                    Carregando desafios...
+            <div className="dashboard-container">
+                <div className="loading-spinner">
+                    <div className="spinner"></div>
+                    <p>Carregando desafios...</p>
                 </div>
             </div>
         );
@@ -269,282 +239,295 @@ function StudentDashboard({ user, onLogout }) {
         : selectedCount === 0
             ? 'Nenhuma disciplina selecionada'
             : `${selectedCount} disciplina(s) selecionada(s)`;
-    const xpInfo = getXpToNextLevel();
+    const xpProgress = getXpToNextLevel();
 
     return (
-        <div className="student-dashboard-layout">
-            <StudentSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-            
-            <main className="student-main">
-                <header className="student-header">
-                    <div className="student-greeting">
-                        <h1>Olá, {currentUser?.name ? currentUser.name.split(' ')[0] : 'Aluno'}! 👋</h1>
-                        <p>Continue sua jornada de aprendizado e conquiste novos níveis!</p>
+        <div className="dashboard-container">
+            {/* Header */}
+            <header className="dashboard-header">
+                <div className="header-content">
+                    <div className="logo-section">
+                        <h1>📚 ProgressEd</h1>
+                        <p>Aprenda jogando • Ganhe XP • Suba de nível</p>
                     </div>
-                    <div className="student-header-actions">
-                        <div className="xp-badge">
-                            ⚡ {currentUser?.xp || 0} XP
+
+                    <div className="user-section">
+                        <div className="user-info">
+                            <div className="user-avatar level-badge" title="Badge de Nível">
+                                <span>{getLevelBadge()}</span>
+                                <div className="badge-label">Nível {currentUser?.level}</div>
+                            </div>
+                            <div className="user-details">
+                                <h3>{currentUser?.name}</h3>
+                                <div className="user-stats">
+                                    <span className="xp-info">⭐ {currentUser?.xp} XP</span>
+                                    <div className="mini-progress" title={`${xpProgress.xpToNext} XP para próximo nível`}>
+                                        <div className="mini-bar" style={{ 
+                                            width: `${(xpProgress.xpInCurrentLevel / xpProgress.xpNeeded) * 100}%` 
+                                        }}></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <button className="notification-btn">
-                            <Bell size={20} />
-                            <span className="notification-dot"></span>
-                        </button>
-                        <button className="avatar-btn" onClick={onLogout} title="Sair">
-                            <div style={{width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:'bold', fontSize:'1.2rem'}}>
-                                {currentUser?.name?.charAt(0) || 'A'}
-                            </div>
-                        </button>
-                    </div>
-                </header>
 
-                <div className="trilhas-grid">
-                    <div className="trilhas-content">
-                        {activeTab === 'Trilhas' && (
-                            <>
-                                {/* Level Card */}
-                                <div className="level-card">
-                                    <div className="level-badge-large">
-                                        <span style={{fontSize:'0.7rem', fontWeight:600, color:'#facc15', marginBottom:'-5px', textTransform:'uppercase'}}>Nível</span>
-                                        <span className="level-num">{currentUser?.level || 1}</span>
-                                    </div>
-                                    <div className="level-info">
-                                        <div className="level-header-row">
-                                            <h3 className="level-title">Nível {currentUser?.level || 1}</h3>
-                                            <span className="level-xp-text">XP: {currentUser?.xp || 0}</span>
-                                        </div>
-                                        <div className="level-progress-bar">
-                                            <div className="level-progress-fill" style={{ width: `${Math.min(100, Math.max(0, xpInfo.progressPercent))}%` }}></div>
-                                            <div className="level-progress-glow" style={{ right: `${100 - Math.min(100, Math.max(0, xpInfo.progressPercent))}%` }}></div>
-                                        </div>
-                                        <span className="level-remaining">Faltam {xpInfo.xpToNext} XP para o próximo nível</span>
-                                    </div>
-                                </div>
-
-                                {/* Path Card */}
-                                <div className="path-card">
-                                    <div className="path-header">
-                                        <div>
-                                            <h3 className="path-title"><Map size={20}/> Trilha de Aprendizagem</h3>
-                                            <span className="path-subtitle">Desenvolva suas habilidades passo a passo</span>
-                                        </div>
-                                        <button className="btn-ghost" style={{fontSize: '0.85rem', color: 'var(--text-secondary)'}} onClick={() => setActiveTab('Desafios')}>
-                                            Ver desafios disponíveis <ChevronRight size={16}/>
-                                        </button>
-                                    </div>
-
-                                    <div className="path-nodes-container">
-                                        <div className="path-line"></div>
-                                        {learningPath.slice(0, 6).map((node) => {
-                                            const Icon = node.icon;
-                                            return (
-                                                <div key={node.id} className="path-node-wrapper" onClick={() => handleNodeClick(node)}>
-                                                    <div className="node-number">{node.id}</div>
-                                                    <div className={`path-node ${node.status}`}>
-                                                        {node.status === 'completed' && <CheckCircle2 size={24} color="var(--secondary-neon)" />}
-                                                        {node.status === 'active' && <Icon size={24} color="var(--primary-neon)" />}
-                                                        {node.status === 'locked' && <Lock size={20} color="var(--text-muted)" />}
-                                                    </div>
-                                                    <span className="node-label">{node.title}</span>
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                </div>
-
-                                {/* Bottom Stats */}
-                                <div className="bottom-stats">
-                                    <div className="bottom-stat-card">
-                                        <div className="stat-icon-wrapper" style={{background: 'rgba(16, 185, 129, 0.15)', color: 'var(--secondary-neon)'}}>
-                                            <CheckCircle2 size={20} />
-                                        </div>
-                                        <div className="bottom-stat-info">
-                                            <span className="stat-label">Progresso</span>
-                                            <span className="stat-val">{getProgressPercentage()}%</span>
-                                        </div>
-                                    </div>
-                                    <div className="bottom-stat-card">
-                                        <div className="stat-icon-wrapper" style={{background: 'rgba(59, 130, 246, 0.15)', color: 'var(--primary-neon)'}}>
-                                            <Edit3 size={20} />
-                                        </div>
-                                        <div className="bottom-stat-info">
-                                            <span className="stat-label">Desafios Feitos</span>
-                                            <span className="stat-val">{completedChallenges.size}</span>
-                                        </div>
-                                    </div>
-                                    <div className="bottom-stat-card">
-                                        <div className="stat-icon-wrapper" style={{background: 'rgba(139, 92, 246, 0.15)', color: 'var(--accent-neon)'}}>
-                                            <Star size={20} />
-                                        </div>
-                                        <div className="bottom-stat-info">
-                                            <span className="stat-label">XP Conquistado</span>
-                                            <span className="stat-val">{currentUser?.xp || 0}</span>
-                                        </div>
-                                    </div>
-                                    <div className="bottom-stat-card">
-                                        <div className="stat-icon-wrapper" style={{background: 'rgba(245, 158, 11, 0.15)', color: 'var(--warning)'}}>
-                                            <Clock size={20} />
-                                        </div>
-                                        <div className="bottom-stat-info">
-                                            <span className="stat-label">Nível Atual</span>
-                                            <span className="stat-val">{currentUser?.level || 1}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </>
-                        )}
-
-                        {activeTab === 'Desafios' && (
-                            <div className="challenge-view">
-                                <div className="challenge-filters card" style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                    <div className="filter-group">
-                                        <label style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>🔍 Buscar:</label>
-                                        <input
-                                            type="text"
-                                            placeholder="Digite o nome do desafio ou matéria..."
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="input"
-                                        />
-                                    </div>
-                                    <div className="filter-group">
-                                        <label style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>📚 Disciplinas:</label>
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                            {subjects.map(subject => (
-                                                <button
-                                                    key={subject}
-                                                    className={`badge ${selectedSubjects === null || selectedSubjects.has(subject) ? 'badge-info' : 'btn-outline'}`}
-                                                    onClick={() => toggleSubject(subject)}
-                                                    style={{ padding: '0.4rem 0.8rem', cursor: 'pointer' }}
-                                                >
-                                                    {subject}
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            <button className="btn btn-ghost" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={selectAllSubjects}>Selecionar tudo</button>
-                                            <button className="btn btn-ghost" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={clearSubjects}>Desmarcar tudo</button>
-                                        </div>
-                                    </div>
-                                    <div className="filter-group">
-                                        <label style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>🎲 Modo de jogo:</label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                            <button
-                                                className={`btn ${randomMode ? 'btn-primary' : 'btn-outline'}`}
-                                                onClick={() => setRandomMode(prev => !prev)}
-                                            >
-                                                {randomMode ? '🎲 Aleatório ativo' : '⚡ Ativar modo aleatório'}
-                                            </button>
-                                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{randomMode ? 'Sorteando desafios aleatórios' : 'Seguindo a ordem'}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {filteredChallenges.length === 0 ? (
-                                    <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-                                        <h3 style={{ marginBottom: '1rem' }}>😕 Nenhum desafio encontrado</h3>
-                                        <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Selecione ao menos uma disciplina ou ajuste sua busca.</p>
-                                        <button className="btn btn-primary" onClick={() => { setSearchQuery(''); selectAllSubjects(); }}>Limpar Filtros</button>
-                                    </div>
-                                ) : currentChallenge ? (
-                                    <>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                                            <span>{randomMode ? '🎲 Desafio aleatório' : `Desafio ${filteredChallenges.indexOf(currentChallenge) + 1} de ${filteredChallenges.length}`}</span>
-                                        </div>
-
-                                        <ChallengeCard
-                                            challenge={currentChallenge}
-                                            onSubmit={handleChallengeSubmit}
-                                            disabled={completedChallenges.has(currentChallenge.id)}
-                                        />
-
-                                        <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', justifyContent: 'center' }}>
-                                            {!randomMode ? (
-                                                <>
-                                                    <button className="btn btn-outline" onClick={() => setCurrentChallengeIndex(Math.max(0, currentChallengeIndex - 1))} disabled={currentChallengeIndex === 0}>← Anterior</button>
-                                                    <button className="btn btn-outline" onClick={() => setCurrentChallengeIndex(Math.min(filteredChallenges.length - 1, currentChallengeIndex + 1))}>Próximo →</button>
-                                                </>
-                                            ) : (
-                                                <button className="btn btn-outline" onClick={() => setRandomChallengeId(getRandomChallengeId(filteredChallenges, currentChallenge.id))}>🎲 Novo desafio aleatório</button>
-                                            )}
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-                                        <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>🎉 Parabéns!</h2>
-                                        <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Você completou todos os desafios disponíveis!</p>
-                                        <button className="btn btn-primary" onClick={() => setActiveTab('Estatísticas')}>Ver Estatísticas</button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {activeTab === 'Estatísticas' && (
-                            <div className="stats-view card">
-                                <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem' }}>📊 Suas Estatísticas por Disciplina</h2>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                                    {Object.entries(getSubjectStats()).map(([subject, stats]) => (
-                                        <div key={subject} className="card" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>{subject}</h3>
-                                            <div className="progress-bar-container" style={{ marginBottom: '0.5rem' }}>
-                                                <div className="progress-bar-fill" style={{ width: `${stats.total > 0 ? (stats.completed / stats.total) * 100 : 0}%` }}></div>
-                                            </div>
-                                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{stats.completed}/{stats.total} concluídos</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === 'Configurações' && (
-                            <div className="settings-panel card">
-                                <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem' }}>⚙️ Configurações</h2>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                                    <div>
-                                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Linguagem do programa (Preferência)</label>
-                                        <select className="input" value={selectedLanguage} onChange={(e) => handleLanguageChange(e.target.value)}>
-                                            {['JavaScript', 'Python', 'Java', 'C#', 'Ruby', 'HTML/CSS'].map(language => (
-                                                <option key={language} value={language}>{language}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    {/* Removed theme selector */}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="ranking-sidebar">
-                        {/* Ranking Card */}
-                        <div className="ranking-card">
-                            <div className="ranking-header">
-                                <h3 className="ranking-title"><Trophy size={20}/> Ranking Global</h3>
-                            </div>
-                            <div className="ranking-list">
-                                {ranking.map((student, index) => (
-                                    <div key={student.id || index} className={`ranking-item ${student.id === currentUser?.id ? 'is-user' : ''}`}>
-                                        <div className="rank-pos">{index + 1}</div>
-                                        <div className="rank-avatar" style={{background: student.id === currentUser?.id ? 'var(--primary)' : 'var(--bg-surface)'}}>
-                                            {student.name.charAt(0)}
-                                        </div>
-                                        <div className="rank-info">
-                                            <span className="rank-name">{student.name}</span>
-                                            <span className="rank-level" style={student.id === currentUser?.id ? {color: 'var(--primary-neon)'} : {}}>
-                                                {student.id === currentUser?.id ? 'Você • ' : ''}Nível {student.level}
-                                            </span>
-                                        </div>
-                                        <div className="rank-xp">{student.xp} XP</div>
-                                    </div>
-                                ))}
-                            </div>
-                            <button className="btn-ghost" style={{ width: '100%', marginTop: '1rem', fontSize: '0.85rem' }} onClick={() => setActiveTab('Ranking')}>
-                                Ver ranking completo &gt;
+                        <div className="header-actions">
+                            <button
+                                className="btn btn-outline"
+                                onClick={() => setShowStats(!showStats)}
+                            >
+                                📊 Estatísticas
+                            </button>
+                            <button
+                                className="btn btn-outline"
+                                onClick={() => setShowRanking(!showRanking)}
+                            >
+                                🏆 Ranking
+                            </button>
+                            <button
+                                className="btn btn-outline"
+                                onClick={() => setShowSettings(prev => !prev)}
+                            >
+                                ⚙️ Configurações
+                            </button>
+                            <button className="btn btn-danger" onClick={onLogout}>
+                                🚪 Sair
                             </button>
                         </div>
                     </div>
                 </div>
+
+                {/* Progress Bar */}
+                <div className="progress-section">
+                    <div className="progress-info">
+                        <span>Progresso: {completedChallenges.size} / {challenges.length} desafios</span>
+                        <span>{getProgressPercentage()}%</span>
+                    </div>
+                    <div className="progress-bar">
+                        <div
+                            className="progress-fill"
+                            style={{ width: `${getProgressPercentage()}%` }}
+                        ></div>
+                    </div>
+                </div>
+            </header>
+
+            {/* Main Content */}
+            <main className="dashboard-main">
+                {showStats ? (
+                    <div className="stats-view">
+                        <h2>📊 Suas Estatísticas</h2>
+                        <div className="stats-grid">
+                            {Object.entries(getSubjectStats()).map(([subject, stats]) => (
+                                <div key={subject} className="stat-card">
+                                    <h3>{subject}</h3>
+                                    <div className="stat-progress">
+                                        <div className="stat-bar">
+                                            <div
+                                                className="stat-fill"
+                                                style={{
+                                                    width: `${stats.total > 0 ? (stats.completed / stats.total) * 100 : 0}%`
+                                                }}
+                                            ></div>
+                                        </div>
+                                        <span>{stats.completed}/{stats.total}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <button
+                            className="btn btn-primary"
+                            onClick={() => setShowStats(false)}
+                        >
+                            ← Voltar aos Desafios
+                        </button>
+                    </div>
+                ) : showRanking ? (
+                    <div className="ranking-section">
+                        <h2>🏆 Ranking - Top Alunos</h2>
+                        <div className="ranking-list">
+                            {ranking.map((student, index) => (
+                                <div key={student.id} className="ranking-item">
+                                    <div className="ranking-position">{index + 1}º</div>
+                                    <div className="ranking-name">{student.name}</div>
+                                    <div className="ranking-xp">⭐ {student.xp} XP</div>
+                                    <div className="ranking-level">🎯 Nível {student.level}</div>
+                                </div>
+                            ))}
+                        </div>
+                        <button
+                            className="btn btn-primary"
+                            onClick={() => setShowRanking(false)}
+                        >
+                            ← Voltar aos Desafios
+                        </button>
+                    </div>
+                ) : (
+                    <div className="challenge-view">
+                        <div className="challenge-grid">
+                            <div className="challenge-filters card">
+                                <div className="filter-group">
+                                    <label>🔍 Buscar:</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Digite o nome do desafio ou matéria..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="search-input"
+                                    />
+                                </div>
+                                <div className="filter-group">
+                                    <label>📚 Disciplinas:</label>
+                                    <div className="subject-pills">
+                                        {subjects.map(subject => (
+                                            <button
+                                                key={subject}
+                                                className={`pill ${selectedSubjects === null || selectedSubjects.has(subject) ? 'active' : ''}`}
+                                                onClick={() => toggleSubject(subject)}
+                                            >
+                                                {subject}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="subject-actions">
+                                        <button className="btn btn-small btn-outline" onClick={selectAllSubjects}>
+                                            Selecionar tudo
+                                        </button>
+                                        <button className="btn btn-small btn-outline" onClick={clearSubjects}>
+                                            Desmarcar tudo
+                                        </button>
+                                    </div>
+                                    <p className="subject-summary">{selectedMessage}</p>
+                                </div>
+                                <div className="filter-group random-mode-group">
+                                    <label>🎲 Modo de jogo:</label>
+                                    <div className="random-mode-row">
+                                        <button
+                                            className={`btn ${randomMode ? 'btn-primary' : 'btn-outline'}`}
+                                            onClick={() => setRandomMode(prev => !prev)}
+                                        >
+                                            {randomMode ? '🎲 Aleatório ativo' : '⚡ Ativar modo aleatório'}
+                                        </button>
+                                        <span className="random-mode-badge">{randomMode ? 'Desafios sorteados entre as disciplinas selecionadas' : 'Use para misturar seus estudos'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {showSettings && (
+                                <aside className="settings-panel card">
+                                    <div className="settings-panel-header">
+                                        <h2>⚙️ Configurações</h2>
+                                        <p>Selecione a linguagem de programação para os desafios.</p>
+                                    </div>
+                                    <div className="settings-item">
+                                        <label>Linguagem do programa</label>
+                                        <select
+                                            className="language-select"
+                                            value={selectedLanguage}
+                                            onChange={(e) => handleLanguageChange(e.target.value)}
+                                        >
+                                            {availableLanguages.map(language => (
+                                                <option key={language} value={language}>{language}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="settings-item">
+                                        <label>Tema visual</label>
+                                        <div className="theme-select-grid">
+                                            {availableThemes.map(theme => (
+                                                <button
+                                                    key={theme.id}
+                                                    type="button"
+                                                    className={`theme-pill ${selectedTheme === theme.id ? 'active' : ''}`}
+                                                    onClick={() => handleThemeChange(theme.id)}
+                                                >
+                                                    {theme.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="settings-item">
+                                        <label>Estado do modo</label>
+                                        <div className="setting-badges">
+                                            <span className={randomMode ? 'badge badge-success' : 'badge badge-warning'}>
+                                                {randomMode ? 'Aleatório' : 'Sequencial'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="settings-item">
+                                        <label>Visão geral</label>
+                                        <p className="settings-description">
+                                            Você está estudando em <strong>{selectedLanguage}</strong> e selecionou <strong>{selectedMessage}</strong>.
+                                        </p>
+                                    </div>
+                                </aside>
+                            )}
+                        </div>
+                        {filteredChallenges.length === 0 ? (
+                            <div className="no-results">
+                                <h3>😕 Nenhum desafio encontrado</h3>
+                                <p>Selecione ao menos uma disciplina ou ajuste sua busca.</p>
+                                <button className="btn btn-primary" onClick={() => {
+                                    setSearchQuery('');
+                                    selectAllSubjects();
+                                }}>
+                                    Limpar Filtros
+                                </button>
+                            </div>
+                        ) : currentChallenge ? (
+                            <>
+                                <div className="challenge-counter">
+                                    <span>{randomMode ? '🎲 Desafio aleatório' : `Desafios ${filteredChallenges.indexOf(currentChallenge) + 1} de ${filteredChallenges.length}`}</span>
+                                    {currentChallenge.subject && (
+                                        <span className="subject-badge">{currentChallenge.subject}</span>
+                                    )}
+                                </div>
+
+                                <ChallengeCard
+                                    challenge={currentChallenge}
+                                    onSubmit={handleChallengeSubmit}
+                                    disabled={completedChallenges.has(currentChallenge.id)}
+                                />
+
+                                <div className="navigation-buttons">
+                                    {!randomMode ? (
+                                        <>
+                                            <button
+                                                className="btn btn-outline"
+                                                onClick={() => setCurrentChallengeIndex(Math.max(0, currentChallengeIndex - 1))}
+                                                disabled={currentChallengeIndex === 0}
+                                            >
+                                                ← Anterior
+                                            </button>
+
+                                            <button
+                                                className="btn btn-outline"
+                                                onClick={() => setCurrentChallengeIndex(Math.min(filteredChallenges.length - 1, currentChallengeIndex + 1))}
+                                            >
+                                                Próximo →
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <button
+                                            className="btn btn-outline"
+                                            onClick={() => setRandomChallengeId(getRandomChallengeId(filteredChallenges, currentChallenge.id))}
+                                        >
+                                            🎲 Novo desafio aleatório
+                                        </button>
+                                    )}
+                                </div>
+                            </>
+                        ) : (
+                            <div className="no-challenges">
+                                <h2>🎉 Parabéns!</h2>
+                                <p>Você completou todos os desafios disponíveis!</p>
+                                <button className="btn btn-primary" onClick={() => setShowStats(true)}>
+                                    Ver Estatísticas
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
             </main>
         </div>
     );
 }
-
 export default StudentDashboard;
