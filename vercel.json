@@ -1,14 +1,12 @@
 {
-  "version": 2,
+  "framework": "nextjs",
   "buildCommand": "cd frontend && npm install && npm run build",
-  "outputDirectory": "frontend/dist",
-  "env": {
-    "VITE_API_URL": "https://progressed-backend-production.up.railway.app"
-  },
-  "routes": [
+  "outputDirectory": "frontend/.next",
+  "rewrites": [
     {
-      "src": "/((?!assets|favicon|manifest|service-worker).*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
+
