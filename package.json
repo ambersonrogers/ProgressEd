@@ -1,0 +1,23 @@
+{
+  "name": "progressed",
+  "version": "1.0.0",
+  "description": "ProgressEd - Plataforma Gamificada de Aprendizado (Web & Mobile)",
+  "scripts": {
+    "start": "node dev.js",
+    "dev": "node dev.js",
+    "dev:backend": "cd backend && npm start",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "test:api": "node backend/test-simple.js"
+  },
+  "keywords": [
+    "education",
+    "gamification",
+    "quiz",
+    "flutter",
+    "react",
+    "nodejs"
+  ],
+  "author": "Amberson Rogers & Equipe ProgressEd",
+  "license": "MIT"
+}

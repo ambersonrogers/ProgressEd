@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import './ChallengeCard.css';
 
 function ChallengeCard({ challenge, onSubmit, disabled }) {
@@ -12,17 +12,15 @@ function ChallengeCard({ challenge, onSubmit, disabled }) {
         setSelectedAnswer(answer);
         setShowResult(true);
 
-        const correct = answer === challenge.correct_answer;
+        const correct = answer === challenge.correctAnswer;
         setIsCorrect(correct);
 
-        // Pequeno delay para mostrar o feedback visual
         setTimeout(async () => {
             await onSubmit(challenge.id, answer);
-            // Reset para próximo desafio
             setSelectedAnswer(null);
             setShowResult(false);
             setIsCorrect(false);
-        }, 2000);
+        }, 1200);
     };
 
     const getDifficultyColor = (difficulty) => {
@@ -36,20 +34,23 @@ function ChallengeCard({ challenge, onSubmit, disabled }) {
 
     const getSubjectIcon = (subject) => {
         const icons = {
+            'Linguagens': '📝',
             'Matemática': '📐',
-            'Física': '⚛️',
-            'Química': '🧪',
-            'Biologia': '🧬',
-            'História': '📜',
-            'Geografia': '🌍',
+            'Ciências da Natureza': '🧪',
+            'Ciências Humanas': '📜',
+            'Atualidades': '🌎',
             'Português': '📚',
             'Inglês': '🇺🇸',
-            'Artes': '🎨',
-            'Filosofia': '🤔',
-            'Sociologia': '👥'
+            'Espanhol': '🇪🇸',
+            'Raízes do Brasil': '🌿',
         };
         return icons[subject] || '📖';
     };
+
+    const options = ['A', 'B', 'C', 'D', 'E'].map((option) => ({
+        key: option,
+        text: challenge[`option${option}`],
+    })).filter((item) => item.text !== undefined && item.text !== null);
 
     return (
         <div className={`challenge-card ${showResult ? 'result-mode' : ''}`}>
@@ -59,8 +60,7 @@ function ChallengeCard({ challenge, onSubmit, disabled }) {
                     <span className="subject-name">{challenge.subject}</span>
                 </div>
                 <div className={`difficulty-badge ${getDifficultyColor(challenge.difficulty)}`}>
-                    {challenge.difficulty === 1 ? 'Fácil' :
-                     challenge.difficulty === 2 ? 'Médio' : 'Difícil'}
+                    {challenge.difficulty === 1 ? 'Fácil' : challenge.difficulty === 2 ? 'Médio' : 'Difícil'}
                 </div>
             </div>
 
@@ -68,10 +68,10 @@ function ChallengeCard({ challenge, onSubmit, disabled }) {
                 <h3 className="challenge-question">{challenge.question}</h3>
 
                 <div className="answers-grid">
-                    {['A', 'B', 'C', 'D'].map((option) => {
-                        const answerText = challenge[`option_${option.toLowerCase()}`];
-                        const isSelected = selectedAnswer === option;
-                        const isCorrectAnswer = challenge.correct_answer === option;
+                    {options.map((option) => {
+                        const answerText = option.text;
+                        const isSelected = selectedAnswer === option.key;
+                        const isCorrectAnswer = challenge.correctAnswer === option.key;
 
                         let buttonClass = 'answer-btn';
                         if (showResult) {
@@ -88,12 +88,12 @@ function ChallengeCard({ challenge, onSubmit, disabled }) {
 
                         return (
                             <button
-                                key={option}
+                                key={option.key}
                                 className={buttonClass}
-                                onClick={() => handleAnswerClick(option)}
+                                onClick={() => handleAnswerClick(option.key)}
                                 disabled={disabled || showResult}
                             >
-                                <span className="option-letter">{option}</span>
+                                <span className="option-letter">{option.key}</span>
                                 <span className="option-text">{answerText}</span>
                                 {showResult && isCorrectAnswer && (
                                     <span className="correct-icon">✓</span>
@@ -112,13 +112,13 @@ function ChallengeCard({ challenge, onSubmit, disabled }) {
                             <>
                                 <span className="result-icon">🎉</span>
                                 <h4>Parabéns! Você acertou!</h4>
-                                <p>Você ganhou {challenge.xp_reward} XP</p>
+                                <p>Você ganhou {challenge.xpReward ?? challenge.xp_reward} XP</p>
                             </>
                         ) : (
                             <>
                                 <span className="result-icon">😅</span>
-                                <h4>A resposta não está correta</h4>
-                                <p>Mais sorte na próxima!</p>
+                                <h4>Resposta incorreta ou tempo esgotado</h4>
+                                <p>{challenge.explanation || 'Analise cada alternativa e tente novamente na próxima questão.'}</p>
                             </>
                         )}
                     </div>
@@ -128,7 +128,7 @@ function ChallengeCard({ challenge, onSubmit, disabled }) {
             <div className="challenge-footer">
                 <div className="xp-reward">
                     <span className="xp-icon">⭐</span>
-                    <span>{challenge.xp_reward} XP</span>
+                    <span>{challenge.xpReward ?? challenge.xp_reward} XP</span>
                 </div>
             </div>
         </div>

@@ -1,533 +1,386 @@
 import { useState, useEffect, useMemo } from 'react';
 import ChallengeCard from '../components/ChallengeCard';
 import api from '../services/api';
+import { DEFAULT_CHALLENGES, DEFAULT_RANKING } from '../data/defaultChallenges';
 import './StudentDashboard.css';
 
+const MODULES = [
+  { id: 1, name: 'Linguagens', subtitle: 'PT • EN • ES', description: 'Trilhas de leitura, escrita e comunicação multicultural.', color: 'from-violet-500 to-indigo-500' },
+  { id: 2, name: 'Matemática', subtitle: 'Números e raciocínio lógico', description: 'Desafios que reforçam raciocínio abstrato e resolução de problemas.', color: 'from-fuchsia-500 to-purple-700' },
+  { id: 3, name: 'Ciências da Natureza', subtitle: 'Física • Química • Biologia', description: 'Questões experimentais e conceitos científicos modernos.', color: 'from-emerald-400 to-teal-500' },
+  { id: 4, name: 'Ciências Humanas', subtitle: 'História • Geografia', description: 'Aprofunde-se em cultura, sociedade e raízes do Brasil.', color: 'from-amber-400 to-orange-500' },
+  { id: 5, name: 'Atualidades', subtitle: 'Mundo em movimento', description: 'Temas atuais e debates relevantes para a sua formação.', color: 'from-cyan-400 to-sky-500' },
+];
+
+const LEVEL_XP = 200;
+
 function StudentDashboard({ user, onLogout }) {
-    const [challenges, setChallenges] = useState([]);
-    const [currentChallengeIndex, setCurrentChallengeIndex] = useState(0);
-    const [loading, setLoading] = useState(true);
-    const [currentUser, setCurrentUser] = useState(user);
-    const [completedChallenges, setCompletedChallenges] = useState(new Set());
-    const [showStats, setShowStats] = useState(false);
-    const [showRanking, setShowRanking] = useState(false);
-    const [showSettings, setShowSettings] = useState(false);
-    const [ranking, setRanking] = useState([]);
-    const [selectedSubjects, setSelectedSubjects] = useState(null);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [randomMode, setRandomMode] = useState(false);
-    const [randomChallengeId, setRandomChallengeId] = useState(null);
-    const [selectedLanguage, setSelectedLanguage] = useState(() => localStorage.getItem('selectedLanguage') || 'JavaScript');
-    const [selectedTheme, setSelectedTheme] = useState(() => localStorage.getItem('selectedTheme') || 'school');
+  const [currentUser, setCurrentUser] = useState(user || { name: 'Estudante', level: 1, xp: 0 });
+  const [challenges, setChallenges] = useState(DEFAULT_CHALLENGES);
+  const [loading, setLoading] = useState(true);
+  const [currentModuleId, setCurrentModuleId] = useState(1);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [completedChallenges, setCompletedChallenges] = useState(new Set());
+  const [ranking, setRanking] = useState(DEFAULT_RANKING);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [timeLeft, setTimeLeft] = useState(25);
+  const [feedback, setFeedback] = useState(null);
+  const [disabled, setDisabled] = useState(false);
 
-    const availableThemes = [
-        { id: 'school', label: 'Escola' },
-        { id: 'cyber', label: 'Cyber' },
-        { id: 'adventure', label: 'Aventura' },
-    ];
+  // 1. Funções de filtro e desafios correntes definidas primeiro
+  const filteredChallengesByModule = (moduleId) => {
+    return challenges.filter((challenge) => challenge.moduleId === moduleId);
+  };
 
-    const handleThemeChange = (themeId) => {
-        setSelectedTheme(themeId);
-    };
+  const filteredChallenges = useMemo(() => {
+    return challenges
+      .filter((challenge) => challenge.moduleId === currentModuleId)
+      .filter((challenge) => {
+        if (!searchQuery.trim()) return true;
+        const qText = challenge.question || challenge.text || '';
+        const sText = challenge.subject || '';
+        return qText.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               sText.toLowerCase().includes(searchQuery.toLowerCase());
+      });
+  }, [challenges, currentModuleId, searchQuery]);
 
-    useEffect(() => {
-        const savedLanguage = localStorage.getItem('selectedLanguage');
-        if (savedLanguage) {
-            setSelectedLanguage(savedLanguage);
-        }
-    }, []);
+  const currentChallenge = filteredChallenges[currentIndex] || null;
 
-    const availableLanguages = ['JavaScript', 'Python', 'Java', 'C#', 'Ruby', 'HTML/CSS'];
-
-    const handleLanguageChange = (language) => {
-        setSelectedLanguage(language);
-        localStorage.setItem('selectedLanguage', language);
-    };
-
-    useEffect(() => {
-        loadChallenges();
-        loadUserProfile();
-        loadRanking();
-    }, []);
-
-    useEffect(() => {
-        if (challenges.length > 0 && selectedSubjects === null) {
-            setSelectedSubjects(new Set(challenges.map(challenge => challenge.subject)));
-        }
-    }, [challenges, selectedSubjects]);
-
-    useEffect(() => {
-        document.documentElement.dataset.theme = selectedTheme;
-        localStorage.setItem('selectedTheme', selectedTheme);
-    }, [selectedTheme]);
-
-    const loadUserProfile = async () => {
-        try {
-            const response = await api.get('/users/profile');
-            setCurrentUser(response.data);
-            localStorage.setItem('user', JSON.stringify(response.data));
-        } catch (error) {
-            console.error('Erro ao carregar perfil:', error);
-        }
-    };
-
-    const loadRanking = async () => {
-        try {
-            const response = await api.get('/ranking');
-            setRanking(response.data);
-        } catch (error) {
-            console.error('Erro ao carregar ranking:', error);
-        }
-    };
-
-    const loadChallenges = async () => {
-        try {
-            const response = await api.get('/challenges');
-            setChallenges(response.data);
-        } catch (error) {
-            console.error('Erro ao carregar desafios:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const getRandomChallengeId = (list, excludeId = null) => {
-        const candidates = excludeId ? list.filter(challenge => challenge.id !== excludeId) : list;
-        if (candidates.length === 0) {
-            return list.length > 0 ? list[0].id : null;
-        }
-        return candidates[Math.floor(Math.random() * candidates.length)].id;
-    };
-
-    const handleChallengeSubmit = async (challengeId, answer) => {
-        try {
-            const response = await api.post(`/challenges/${challengeId}/submit`, { answer });
-
-            if (response.data.user) {
-                setCurrentUser(response.data.user);
-                localStorage.setItem('user', JSON.stringify(response.data.user));
-            }
-
-            setCompletedChallenges(prev => new Set([...prev, challengeId]));
-
-            setTimeout(() => {
-                if (randomMode) {
-                    setRandomChallengeId(getRandomChallengeId(filteredChallenges, challengeId));
-                } else {
-                    setCurrentChallengeIndex(prevIndex => {
-                        if (prevIndex < filteredChallenges.length - 1) {
-                            return prevIndex + 1;
-                        }
-                        return 0;
-                    });
-                }
-            }, 1000);
-
-        } catch (error) {
-            console.error('Erro ao submeter desafio:', error);
-            alert('Erro ao enviar resposta. Tente novamente.');
-        }
-    };
-
-    const getProgressPercentage = () => {
-        if (challenges.length === 0) return 0;
-        return Math.round((completedChallenges.size / challenges.length) * 100);
-    };
-
-    const getSubjectStats = () => {
-        const stats = {};
-        challenges.forEach(challenge => {
-            if (!stats[challenge.subject]) {
-                stats[challenge.subject] = { total: 0, completed: 0 };
-            }
-            stats[challenge.subject].total++;
-            if (completedChallenges.has(challenge.id)) {
-                stats[challenge.subject].completed++;
-            }
-        });
-        return stats;
-    };
-
-    const getXpToNextLevel = () => {
-        const XP_PER_LEVEL = 500;
-        const nextLevelXp = (currentUser?.level || 1) * XP_PER_LEVEL;
-        const currentLevelXp = ((currentUser?.level || 1) - 1) * XP_PER_LEVEL;
-        const userXp = currentUser?.xp || 0;
-        const xpInCurrentLevel = userXp - currentLevelXp;
-        const xpNeeded = nextLevelXp - currentLevelXp;
-        const xpToNext = nextLevelXp - userXp;
-        return { xpToNext, xpNeeded, xpInCurrentLevel };
-    };
-
-    const subjects = useMemo(() => {
-        return Array.from(new Set(challenges.map(challenge => challenge.subject))).sort();
-    }, [challenges]);
-
-    const filteredChallenges = useMemo(() => {
-        return challenges.filter(challenge => {
-            const matchesSubject = selectedSubjects === null || selectedSubjects.has(challenge.subject);
-            const matchesSearch = challenge.question?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                challenge.subject?.toLowerCase().includes(searchQuery.toLowerCase());
-            return matchesSubject && matchesSearch;
-        });
-    }, [challenges, selectedSubjects, searchQuery]);
-
-    useEffect(() => {
-        if (filteredChallenges.length === 0) {
-            setCurrentChallengeIndex(0);
-            setRandomChallengeId(null);
-            return;
-        }
-
-        if (randomMode) {
-            setRandomChallengeId(prevId => filteredChallenges.some(challenge => challenge.id === prevId) ? prevId : getRandomChallengeId(filteredChallenges));
-        } else {
-            setCurrentChallengeIndex(prevIndex => Math.min(prevIndex, filteredChallenges.length - 1));
-        }
-    }, [filteredChallenges.length, randomMode, selectedSubjects, searchQuery]);
-
-    const toggleSubject = (subject) => {
-        setSelectedSubjects(prev => {
-            const next = prev === null ? new Set(subjects) : new Set(prev);
-            if (next.has(subject)) {
-                next.delete(subject);
-            } else {
-                next.add(subject);
-            }
-            return next;
-        });
-    };
-
-    const selectAllSubjects = () => {
-        setSelectedSubjects(new Set(subjects));
-    };
-
-    const clearSubjects = () => {
-        setSelectedSubjects(new Set());
-    };
-
-    const getLevelBadge = () => {
-        const level = currentUser?.level || 1;
-        if (level >= 10) return '👑';
-        if (level >= 8) return '🥇';
-        if (level >= 5) return '🔥';
-        return '⭐';
-    };
-
-    if (loading) {
-        return (
-            <div className="dashboard-container">
-                <div className="loading-spinner">
-                    <div className="spinner"></div>
-                    <p>Carregando desafios...</p>
-                </div>
-            </div>
-        );
-    }
-
-    const currentChallenge = (() => {
-        if (filteredChallenges.length === 0) return null;
-        if (randomMode) {
-            return filteredChallenges.find(challenge => challenge.id === randomChallengeId) || filteredChallenges[Math.floor(Math.random() * filteredChallenges.length)];
-        }
-        return filteredChallenges[Math.min(currentChallengeIndex, filteredChallenges.length - 1)];
-    })();
-
-    const selectedCount = selectedSubjects === null ? subjects.length : selectedSubjects.size;
-    const selectedMessage = selectedSubjects === null
-        ? 'Todas as disciplinas selecionadas'
-        : selectedCount === 0
-            ? 'Nenhuma disciplina selecionada'
-            : `${selectedCount} disciplina(s) selecionada(s)`;
-    const xpProgress = getXpToNextLevel();
-
-    return (
-        <div className="dashboard-container">
-            {/* Header */}
-            <header className="dashboard-header">
-                <div className="header-content">
-                    <div className="logo-section">
-                        <h1>📚 ProgressEd</h1>
-                        <p>Aprenda jogando • Ganhe XP • Suba de nível</p>
-                    </div>
-
-                    <div className="user-section">
-                        <div className="user-info">
-                            <div className="user-avatar level-badge" title="Badge de Nível">
-                                <span>{getLevelBadge()}</span>
-                                <div className="badge-label">Nível {currentUser?.level}</div>
-                            </div>
-                            <div className="user-details">
-                                <h3>{currentUser?.name}</h3>
-                                <div className="user-stats">
-                                    <span className="xp-info">⭐ {currentUser?.xp} XP</span>
-                                    <div className="mini-progress" title={`${xpProgress.xpToNext} XP para próximo nível`}>
-                                        <div className="mini-bar" style={{ 
-                                            width: `${(xpProgress.xpInCurrentLevel / xpProgress.xpNeeded) * 100}%` 
-                                        }}></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="header-actions">
-                            <button
-                                className="btn btn-outline"
-                                onClick={() => setShowStats(!showStats)}
-                            >
-                                📊 Estatísticas
-                            </button>
-                            <button
-                                className="btn btn-outline"
-                                onClick={() => setShowRanking(!showRanking)}
-                            >
-                                🏆 Ranking
-                            </button>
-                            <button
-                                className="btn btn-outline"
-                                onClick={() => setShowSettings(prev => !prev)}
-                            >
-                                ⚙️ Configurações
-                            </button>
-                            <button className="btn btn-danger" onClick={onLogout}>
-                                🚪 Sair
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="progress-section">
-                    <div className="progress-info">
-                        <span>Progresso: {completedChallenges.size} / {challenges.length} desafios</span>
-                        <span>{getProgressPercentage()}%</span>
-                    </div>
-                    <div className="progress-bar">
-                        <div
-                            className="progress-fill"
-                            style={{ width: `${getProgressPercentage()}%` }}
-                        ></div>
-                    </div>
-                </div>
-            </header>
-
-            {/* Main Content */}
-            <main className="dashboard-main">
-                {showStats ? (
-                    <div className="stats-view">
-                        <h2>📊 Suas Estatísticas</h2>
-                        <div className="stats-grid">
-                            {Object.entries(getSubjectStats()).map(([subject, stats]) => (
-                                <div key={subject} className="stat-card">
-                                    <h3>{subject}</h3>
-                                    <div className="stat-progress">
-                                        <div className="stat-bar">
-                                            <div
-                                                className="stat-fill"
-                                                style={{
-                                                    width: `${stats.total > 0 ? (stats.completed / stats.total) * 100 : 0}%`
-                                                }}
-                                            ></div>
-                                        </div>
-                                        <span>{stats.completed}/{stats.total}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        <button
-                            className="btn btn-primary"
-                            onClick={() => setShowStats(false)}
-                        >
-                            ← Voltar aos Desafios
-                        </button>
-                    </div>
-                ) : showRanking ? (
-                    <div className="ranking-section">
-                        <h2>🏆 Ranking - Top Alunos</h2>
-                        <div className="ranking-list">
-                            {ranking.map((student, index) => (
-                                <div key={student.id} className="ranking-item">
-                                    <div className="ranking-position">{index + 1}º</div>
-                                    <div className="ranking-name">{student.name}</div>
-                                    <div className="ranking-xp">⭐ {student.xp} XP</div>
-                                    <div className="ranking-level">🎯 Nível {student.level}</div>
-                                </div>
-                            ))}
-                        </div>
-                        <button
-                            className="btn btn-primary"
-                            onClick={() => setShowRanking(false)}
-                        >
-                            ← Voltar aos Desafios
-                        </button>
-                    </div>
-                ) : (
-                    <div className="challenge-view">
-                        <div className="challenge-grid">
-                            <div className="challenge-filters card">
-                                <div className="filter-group">
-                                    <label>🔍 Buscar:</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Digite o nome do desafio ou matéria..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="search-input"
-                                    />
-                                </div>
-                                <div className="filter-group">
-                                    <label>📚 Disciplinas:</label>
-                                    <div className="subject-pills">
-                                        {subjects.map(subject => (
-                                            <button
-                                                key={subject}
-                                                className={`pill ${selectedSubjects === null || selectedSubjects.has(subject) ? 'active' : ''}`}
-                                                onClick={() => toggleSubject(subject)}
-                                            >
-                                                {subject}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    <div className="subject-actions">
-                                        <button className="btn btn-small btn-outline" onClick={selectAllSubjects}>
-                                            Selecionar tudo
-                                        </button>
-                                        <button className="btn btn-small btn-outline" onClick={clearSubjects}>
-                                            Desmarcar tudo
-                                        </button>
-                                    </div>
-                                    <p className="subject-summary">{selectedMessage}</p>
-                                </div>
-                                <div className="filter-group random-mode-group">
-                                    <label>🎲 Modo de jogo:</label>
-                                    <div className="random-mode-row">
-                                        <button
-                                            className={`btn ${randomMode ? 'btn-primary' : 'btn-outline'}`}
-                                            onClick={() => setRandomMode(prev => !prev)}
-                                        >
-                                            {randomMode ? '🎲 Aleatório ativo' : '⚡ Ativar modo aleatório'}
-                                        </button>
-                                        <span className="random-mode-badge">{randomMode ? 'Desafios sorteados entre as disciplinas selecionadas' : 'Use para misturar seus estudos'}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            {showSettings && (
-                                <aside className="settings-panel card">
-                                    <div className="settings-panel-header">
-                                        <h2>⚙️ Configurações</h2>
-                                        <p>Selecione a linguagem de programação para os desafios.</p>
-                                    </div>
-                                    <div className="settings-item">
-                                        <label>Linguagem do programa</label>
-                                        <select
-                                            className="language-select"
-                                            value={selectedLanguage}
-                                            onChange={(e) => handleLanguageChange(e.target.value)}
-                                        >
-                                            {availableLanguages.map(language => (
-                                                <option key={language} value={language}>{language}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="settings-item">
-                                        <label>Tema visual</label>
-                                        <div className="theme-select-grid">
-                                            {availableThemes.map(theme => (
-                                                <button
-                                                    key={theme.id}
-                                                    type="button"
-                                                    className={`theme-pill ${selectedTheme === theme.id ? 'active' : ''}`}
-                                                    onClick={() => handleThemeChange(theme.id)}
-                                                >
-                                                    {theme.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div className="settings-item">
-                                        <label>Estado do modo</label>
-                                        <div className="setting-badges">
-                                            <span className={randomMode ? 'badge badge-success' : 'badge badge-warning'}>
-                                                {randomMode ? 'Aleatório' : 'Sequencial'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="settings-item">
-                                        <label>Visão geral</label>
-                                        <p className="settings-description">
-                                            Você está estudando em <strong>{selectedLanguage}</strong> e selecionou <strong>{selectedMessage}</strong>.
-                                        </p>
-                                    </div>
-                                </aside>
-                            )}
-                        </div>
-                        {filteredChallenges.length === 0 ? (
-                            <div className="no-results">
-                                <h3>😕 Nenhum desafio encontrado</h3>
-                                <p>Selecione ao menos uma disciplina ou ajuste sua busca.</p>
-                                <button className="btn btn-primary" onClick={() => {
-                                    setSearchQuery('');
-                                    selectAllSubjects();
-                                }}>
-                                    Limpar Filtros
-                                </button>
-                            </div>
-                        ) : currentChallenge ? (
-                            <>
-                                <div className="challenge-counter">
-                                    <span>{randomMode ? '🎲 Desafio aleatório' : `Desafios ${filteredChallenges.indexOf(currentChallenge) + 1} de ${filteredChallenges.length}`}</span>
-                                    {currentChallenge.subject && (
-                                        <span className="subject-badge">{currentChallenge.subject}</span>
-                                    )}
-                                </div>
-
-                                <ChallengeCard
-                                    challenge={currentChallenge}
-                                    onSubmit={handleChallengeSubmit}
-                                    disabled={completedChallenges.has(currentChallenge.id)}
-                                />
-
-                                <div className="navigation-buttons">
-                                    {!randomMode ? (
-                                        <>
-                                            <button
-                                                className="btn btn-outline"
-                                                onClick={() => setCurrentChallengeIndex(Math.max(0, currentChallengeIndex - 1))}
-                                                disabled={currentChallengeIndex === 0}
-                                            >
-                                                ← Anterior
-                                            </button>
-
-                                            <button
-                                                className="btn btn-outline"
-                                                onClick={() => setCurrentChallengeIndex(Math.min(filteredChallenges.length - 1, currentChallengeIndex + 1))}
-                                            >
-                                                Próximo →
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <button
-                                            className="btn btn-outline"
-                                            onClick={() => setRandomChallengeId(getRandomChallengeId(filteredChallenges, currentChallenge.id))}
-                                        >
-                                            🎲 Novo desafio aleatório
-                                        </button>
-                                    )}
-                                </div>
-                            </>
-                        ) : (
-                            <div className="no-challenges">
-                                <h2>🎉 Parabéns!</h2>
-                                <p>Você completou todos os desafios disponíveis!</p>
-                                <button className="btn btn-primary" onClick={() => setShowStats(true)}>
-                                    Ver Estatísticas
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                )}
-            </main>
-        </div>
+  // 2. Módulos completados e desbloqueados
+  const completedModuleIds = useMemo(() => {
+    return new Set(
+      MODULES.filter((module) => {
+        const modChallenges = filteredChallengesByModule(module.id);
+        return modChallenges.length > 0 && modChallenges.every((c) => completedChallenges.has(c.id));
+      }).map((module) => module.id)
     );
+  }, [challenges, completedChallenges]);
+
+  const unlockedModules = useMemo(() => {
+    const progress = Math.min(Math.floor((currentUser?.xp || 0) / LEVEL_XP), MODULES.length - 1);
+    return MODULES.map((module, index) => ({
+      ...module,
+      unlocked: index <= progress || index === 0,
+      completed: completedModuleIds.has(module.id),
+    }));
+  }, [currentUser, completedModuleIds]);
+
+  const xpForNextLevel = ((currentUser?.level || 1) * LEVEL_XP) - (currentUser?.xp || 0);
+  const levelProgress = ((currentUser?.xp || 0) % LEVEL_XP) / LEVEL_XP;
+  const nextAllowedModule = Math.min(Math.floor((currentUser?.xp || 0) / LEVEL_XP) + 2, MODULES.length);
+
+  // 3. Efeitos
+  useEffect(() => {
+    loadUserProfile();
+    loadChallenges();
+    loadRanking();
+  }, []);
+
+  useEffect(() => {
+    if (filteredChallenges.length === 0) {
+      setCurrentIndex(0);
+    } else if (currentIndex >= filteredChallenges.length) {
+      setCurrentIndex(0);
+    }
+  }, [filteredChallenges.length]);
+
+  useEffect(() => {
+    if (timeLeft <= 0 && currentChallenge) {
+      handleTimeout();
+    }
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => Math.max(prev - 1, 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [timeLeft, currentIndex, currentChallenge]);
+
+  const loadUserProfile = async () => {
+    try {
+      const response = await api.get('/users/profile');
+      if (response.data) {
+        setCurrentUser(response.data);
+        localStorage.setItem('user', JSON.stringify(response.data));
+      }
+    } catch (error) {
+      console.warn('Usando perfil local/offline:', error.message);
+    }
+  };
+
+  const loadChallenges = async () => {
+    try {
+      const response = await api.get('/challenges');
+      if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+        setChallenges(response.data);
+      } else {
+        setChallenges(DEFAULT_CHALLENGES);
+      }
+    } catch (error) {
+      console.warn('Backend offline, carregando trilhas locais padrão:', error.message);
+      setChallenges(DEFAULT_CHALLENGES);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadRanking = async () => {
+    try {
+      const response = await api.get('/ranking');
+      if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+        setRanking(response.data);
+      } else {
+        setRanking(DEFAULT_RANKING);
+      }
+    } catch (error) {
+      console.warn('Usando ranking local/offline:', error.message);
+      setRanking(DEFAULT_RANKING);
+    }
+  };
+
+  const handleChallengeSubmit = async (challengeId, answer) => {
+    if (!challengeId) return;
+    setDisabled(true);
+
+    try {
+      const response = await api.post(`/challenges/${challengeId}/submit`, { answer });
+      if (response.data.user) {
+        setCurrentUser(response.data.user);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+      setFeedback({
+        success: response.data.correct,
+        message: response.data.message,
+        explanation: response.data.explanation,
+      });
+      if (currentChallenge && response.data.correct) {
+        setCompletedChallenges((prev) => new Set(prev).add(currentChallenge.id));
+      }
+    } catch (error) {
+      // Fallback offline resiliente: calcula acerto e XP localmente sem quebrar
+      const isCorrect = currentChallenge && answer === currentChallenge.correctAnswer;
+      const xpGained = isCorrect ? (currentChallenge.xpReward || currentChallenge.xp_reward || 50) : 0;
+      const newXp = (currentUser.xp || 0) + xpGained;
+      const newLevel = Math.floor(newXp / LEVEL_XP) + 1;
+      const updatedUser = { ...currentUser, xp: newXp, level: newLevel };
+      
+      setCurrentUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+
+      setFeedback({
+        success: isCorrect,
+        message: isCorrect ? `Parabéns! Você acertou e ganhou +${xpGained} XP!` : (answer ? 'Resposta incorreta.' : 'Tempo esgotado!'),
+        explanation: currentChallenge?.explanation || 'Continue praticando para dominar os conteúdos da BNCC.'
+      });
+
+      if (isCorrect && currentChallenge) {
+        setCompletedChallenges((prev) => new Set(prev).add(currentChallenge.id));
+      }
+    } finally {
+      setTimeout(() => {
+        setCurrentIndex((prev) => (prev + 1) % (filteredChallenges.length || 1));
+        setTimeLeft(25);
+        setDisabled(false);
+        setFeedback(null);
+      }, 1400);
+    }
+  };
+
+  const handleTimeout = async () => {
+    if (!currentChallenge || disabled) return;
+    await handleChallengeSubmit(currentChallenge.id, null);
+  };
+
+  const handleModuleSelect = (module) => {
+    if (!module.unlocked) return;
+    setCurrentModuleId(module.id);
+    setCurrentIndex(0);
+    setTimeLeft(25);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 text-white">
+        <div className="text-center">
+          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-violet-500/20 text-3xl">⌛</div>
+          <p className="text-lg font-semibold">Carregando desafios...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-white">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <header className="mb-8 grid gap-6 rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-glow backdrop-blur-xl sm:grid-cols-[1.3fr_0.7fr]">
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="text-sm uppercase tracking-[0.3em] text-violet-300">Progresso do Estudante</p>
+                <h1 className="text-4xl font-semibold text-white">Olá, {currentUser.name}</h1>
+                <p className="max-w-2xl text-slate-400">Complete trilhas, colete medalhas e avance no ranking da turma.</p>
+              </div>
+              <button onClick={onLogout} className="glow-button bg-slate-800/90 hover:bg-slate-800">Sair</button>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="rounded-3xl bg-slate-900/90 p-5">
+                <p className="text-sm text-slate-400">Nível atual</p>
+                <p className="mt-2 text-3xl font-semibold text-white">{currentUser.level}</p>
+                <p className="mt-1 text-sm text-slate-400">{currentUser.xp} XP</p>
+              </div>
+              <div className="rounded-3xl bg-slate-900/90 p-5">
+                <p className="text-sm text-slate-400">XP para o próximo nível</p>
+                <p className="mt-2 text-3xl font-semibold text-white">{Math.max(0, xpForNextLevel)}</p>
+                <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-800">
+                  <div className="h-3 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500" style={{ width: `${Math.min(100, Math.round(levelProgress * 100))}%` }} />
+                </div>
+              </div>
+              <div className="rounded-3xl bg-slate-900/90 p-5">
+                <p className="text-sm text-slate-400">Medalhas conquistadas</p>
+                <div className="mt-4 flex flex-wrap gap-3 text-2xl">
+                  {currentUser.level >= 10 ? '👑' : ''}
+                  {currentUser.level >= 8 ? '🥇' : ''}
+                  {currentUser.level >= 5 ? '🔥' : ''}
+                  {currentUser.level < 5 ? '⭐' : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[1.75rem] bg-slate-900/80 p-6 shadow-lg shadow-black/20">
+            <p className="text-sm uppercase tracking-[0.3em] text-violet-300">Ranking da turma</p>
+            <div className="mt-5 space-y-3">
+              {ranking.slice(0, 5).map((student, index) => (
+                <div key={student.id} className="flex items-center justify-between rounded-3xl border border-white/10 bg-white/5 p-4">
+                  <div>
+                    <p className="text-sm text-slate-300">{index + 1}º • {student.name}</p>
+                    <p className="text-xs text-slate-500">Nível {student.level}</p>
+                  </div>
+                  <div className="rounded-full bg-violet-500/10 px-3 py-1 text-sm font-semibold text-violet-200">{student.xp} XP</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </header>
+
+        <section className="mb-8 space-y-5">
+          <div className="flex flex-col gap-4 rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-glow backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.2em] text-violet-300">Trilhas de estudo</p>
+              <h2 className="mt-2 text-2xl font-semibold text-white">Desbloqueie uma trilha por vez</h2>
+            </div>
+            <p className="max-w-xl text-sm text-slate-400">Para avançar à próxima trilha, complete as questões do módulo atual ou acumule XP suficiente.</p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {MODULES.map((module) => {
+              const isUnlocked = module.id <= nextAllowedModule || module.id === 1;
+              const isSelected = module.id === currentModuleId;
+              return (
+                <button
+                  key={module.id}
+                  onClick={() => handleModuleSelect({ ...module, unlocked: isUnlocked })}
+                  className={`group overflow-hidden rounded-[1.5rem] border p-5 text-left transition duration-300 ${isSelected ? 'border-violet-400 bg-violet-950/30 shadow-glow' : 'border-white/10 bg-slate-900/80 hover:border-violet-400/50'} ${isUnlocked ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
+                >
+                  <div className={`mb-4 h-2 rounded-full bg-gradient-to-r ${module.color}`} />
+                  <p className="text-sm uppercase tracking-[0.25em] text-slate-400">{module.subtitle}</p>
+                  <h3 className="mt-3 text-xl font-semibold text-white">{module.name}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">{module.description}</p>
+                  <div className="mt-5 flex items-center justify-between text-sm text-slate-300">
+                    {isUnlocked ? (
+                      <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-emerald-300">Desbloqueado</span>
+                    ) : (
+                      <span className="rounded-full bg-white/5 px-3 py-1 text-slate-400">Bloqueado</span>
+                    )}
+                    {module.id === 4 && <span className="rounded-full bg-amber-500/15 px-3 py-1 text-amber-200">Raízes do Brasil</span>}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <div className="grid gap-6 xl:grid-cols-[0.72fr_0.28fr]">
+          <div className="rounded-[2rem] border border-white/10 bg-slate-950/85 p-6 shadow-glow backdrop-blur-xl">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="text-sm uppercase tracking-[0.25em] text-violet-300">Quiz interativo</p>
+                <h2 className="text-3xl font-semibold text-white">Mantenha a evolução</h2>
+              </div>
+              <div className="rounded-full bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200">25s por questão</div>
+            </div>
+            <div className="mb-5 grid gap-4 sm:grid-cols-[1fr_auto]">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm text-slate-400">
+                  <span>Temporizador</span>
+                  <span>{timeLeft}s restantes</span>
+                </div>
+                <div className="h-3 overflow-hidden rounded-full bg-white/10">
+                  <div className="h-3 rounded-full bg-gradient-to-r from-violet-500 to-indigo-400 transition-all" style={{ width: `${(timeLeft / 25) * 100}%` }} />
+                </div>
+              </div>
+              <div className="rounded-3xl bg-slate-900/80 px-4 py-3 text-center text-sm text-slate-300">
+                {currentUser.level}º Nível • {currentUser.xp} XP
+              </div>
+            </div>
+
+            {currentChallenge ? (
+              <ChallengeCard
+                challenge={currentChallenge}
+                onSubmit={handleChallengeSubmit}
+                disabled={disabled}
+              />
+            ) : (
+              <div className="rounded-[1.5rem] border border-dashed border-white/10 bg-slate-900/70 p-8 text-center text-slate-300">
+                <p className="text-lg font-semibold text-white">Nenhum desafio disponível nesta trilha.</p>
+                <p className="mt-3 text-sm">Aguarde a próxima rodada ou selecione outra trilha desbloqueada.</p>
+              </div>
+            )}
+
+            {feedback && (
+              <div className={`mt-5 rounded-[1.5rem] border ${feedback.success ? 'border-emerald-400/20 bg-emerald-500/10' : 'border-rose-400/20 bg-rose-500/10'} p-5 text-slate-100`}>
+                <p className="font-semibold">{feedback.success ? '🎉 Feedback positivo' : '💡 Dica pedagógica'}</p>
+                <p className="mt-2 text-sm text-slate-200">{feedback.message}</p>
+                {feedback.explanation && <p className="mt-3 text-sm text-slate-300">{feedback.explanation}</p>}
+              </div>
+            )}
+          </div>
+
+          <aside className="space-y-6 rounded-[2rem] border border-white/10 bg-slate-950/85 p-6 shadow-glow backdrop-blur-xl">
+            <div className="rounded-[1.75rem] border border-white/10 bg-slate-900/80 p-5">
+              <p className="text-sm uppercase tracking-[0.25em] text-violet-300">Resumo da trilha</p>
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center justify-between text-sm text-slate-300">
+                  <span>Desafios completos</span>
+                  <span>{completedChallenges.size}/{filteredChallenges.length || 1}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm text-slate-300">
+                  <span>Trilha selecionada</span>
+                  <span>{MODULES.find((item) => item.id === currentModuleId)?.name}</span>
+                </div>
+                <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/10">
+                  <div className="h-3 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500" style={{ width: `${Math.round((completedChallenges.size / (filteredChallenges.length || 1)) * 100)}%` }} />
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[1.75rem] border border-white/10 bg-slate-900/80 p-5">
+              <p className="text-sm uppercase tracking-[0.25em] text-violet-300">Ranking da sala</p>
+              <div className="mt-4 space-y-3">
+                {ranking.slice(0, 5).map((student, index) => (
+                  <div key={student.id} className="flex items-center justify-between rounded-3xl bg-white/5 px-4 py-3">
+                    <div>
+                      <p className="text-sm text-slate-100">{student.name}</p>
+                      <p className="text-xs text-slate-500">Nível {student.level}</p>
+                    </div>
+                    <span className="rounded-full bg-violet-500/10 px-3 py-1 text-xs text-violet-100">{student.xp} XP</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  );
 }
+
 export default StudentDashboard;

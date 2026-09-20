@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "ProgressEd: Dev Completo (Node dev.js)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/dev.js",
+      "console": "integratedTerminal",
+      "restart": true
+    },
+    {
+      "name": "ProgressEd: Backend (server.js)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/server.js",
+      "cwd": "${workspaceFolder}/backend",
+      "console": "integratedTerminal",
+      "restart": true
+    },
+    {
+      "name": "ProgressEd: Mobile (Flutter)",
+      "type": "dart",
+      "request": "launch",
+      "program": "${workspaceFolder}/progressed_mobile/lib/main.dart",
+      "cwd": "${workspaceFolder}/progressed_mobile"
+    }
+  ]
+}

@@ -1,34 +1,32 @@
-# Render configuration for ProgressEd
-# Serviços:
-# - Backend Node (Express)
-# - PostgreSQL database (progress-ed-db)
+# Render Blueprint para ProgressEd (100% Gratuito)
+# Provisiona Backend Express + Banco PostgreSQL Gerenciado na Nuvem
+
+databases:
+  - name: progress-ed-db
+    databaseName: progressed
+    user: progressed_user
+    plan: free
+    region: oregon
 
 services:
   - type: web
     name: progress-ed-backend
     runtime: node
+    plan: free
     region: oregon
-    plan: starter
-    buildCommand: "npm install"
-    startCommand: "npm start"
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
-        value: "production"
+        value: production
       - key: PORT
-        value: "5000"
+        value: 5000
       - key: DATABASE_URL
         fromDatabase:
           name: progress-ed-db
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
-    autoDeploy: true
-    # Caminho onde está o package.json do backend
-    rootDir: backend
-
-  - type: postgresql
-    name: progress-ed-db
-    region: oregon
-    plan: starter
-    # Render cria o DATABASE_URL automaticamente para o serviço acima
-
+      - key: FRONTEND_URL
+        value: https://progress-ed.vercel.app
