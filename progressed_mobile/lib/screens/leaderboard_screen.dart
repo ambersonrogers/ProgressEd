@@ -3,7 +3,7 @@ import '../models/ranking_model.dart';
 import '../services/api_service.dart';
 
 class LeaderboardScreen extends StatefulWidget {
-  const LeaderboardScreen({Key? key}) : super(key: key);
+  const LeaderboardScreen({super.key});
 
   @override
   State<LeaderboardScreen> createState() => _LeaderboardScreenState();

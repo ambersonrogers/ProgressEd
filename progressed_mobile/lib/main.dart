@@ -19,7 +19,7 @@ void main() async {
 }
 
 class ProgressEdApp extends StatelessWidget {
-  const ProgressEdApp({Key? key}) : super(key: key);
+  const ProgressEdApp({super.key});
 
   @override
   Widget build(BuildContext context) {

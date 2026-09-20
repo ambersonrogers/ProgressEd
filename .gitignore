@@ -1,2 +1,6 @@
 .vercel
 .env*.local
+node_modules/
+progressed_mobile/build/
+progressed_mobile/.dart_tool/
+

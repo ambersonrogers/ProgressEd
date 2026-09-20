@@ -6,7 +6,7 @@ import 'leaderboard_screen.dart';
 import 'login_screen.dart';
 
 class StudentDashboardScreen extends StatelessWidget {
-  const StudentDashboardScreen({Key? key}) : super(key: key);
+  const StudentDashboardScreen({super.key});
 
   static final List<Map<String, dynamic>> modules = [
     {
@@ -121,7 +121,7 @@ class StudentDashboardScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.between,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('JORNADA ATIVA', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white70, letterSpacing: 1.5)),
                       Container(
@@ -198,7 +198,7 @@ class StudentDashboardScreen extends StatelessWidget {
                   ),
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),

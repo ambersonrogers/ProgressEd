@@ -5,7 +5,7 @@ import '../services/mock_bank.dart';
 import 'login_screen.dart';
 
 class TeacherDashboardScreen extends StatelessWidget {
-  const TeacherDashboardScreen({Key? key}) : super(key: key);
+  const TeacherDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +70,7 @@ class TeacherDashboardScreen extends StatelessWidget {
                   trailing: Text('${st.xp} XP', style: const TextStyle(color: Color(0xFF38BDF8), fontWeight: FontWeight.bold)),
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),

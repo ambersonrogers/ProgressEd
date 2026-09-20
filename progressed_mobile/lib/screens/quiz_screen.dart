@@ -9,7 +9,7 @@ class QuizScreen extends StatefulWidget {
   final int moduleId;
   final String moduleTitle;
 
-  const QuizScreen({Key? key, required this.moduleId, required this.moduleTitle}) : super(key: key);
+  const QuizScreen({super.key, required this.moduleId, required this.moduleTitle});
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
@@ -132,7 +132,7 @@ class _QuizScreenState extends State<QuizScreen> {
             children: [
               // Timer & XP Badge
               Row(
-                mainAxisAlignment: MainAxisAlignment.between,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
