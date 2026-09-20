@@ -1,10 +1,32 @@
-﻿import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './ChallengeCard.css';
 
-function ChallengeCard({ challenge, onSubmit, disabled }) {
+function ChallengeCard({ challenge, onSubmit, onNext, isLastQuestion, disabled, timeExpired }) {
     const [selectedAnswer, setSelectedAnswer] = useState(null);
     const [showResult, setShowResult] = useState(false);
     const [isCorrect, setIsCorrect] = useState(false);
+
+    // Reset ao mudar de desafio
+    useEffect(() => {
+        setSelectedAnswer(null);
+        setShowResult(false);
+        setIsCorrect(false);
+    }, [challenge?.id]);
+
+    // Trata expiração do tempo vinda do timer pai
+    useEffect(() => {
+        if (timeExpired && !showResult) {
+            setShowResult(true);
+            setIsCorrect(false);
+            if (onSubmit) {
+                onSubmit(challenge.id, null);
+            }
+        }
+    }, [timeExpired]);
+
+    if (!challenge) return null;
+
+    const correctAnswer = (challenge.correctAnswer || challenge.correct_answer || 'A').toUpperCase();
 
     const handleAnswerClick = async (answer) => {
         if (disabled || showResult) return;
@@ -12,19 +34,22 @@ function ChallengeCard({ challenge, onSubmit, disabled }) {
         setSelectedAnswer(answer);
         setShowResult(true);
 
-        const correct = answer === challenge.correctAnswer;
+        const correct = answer.toUpperCase() === correctAnswer;
         setIsCorrect(correct);
 
-        setTimeout(async () => {
+        if (onSubmit) {
             await onSubmit(challenge.id, answer);
-            setSelectedAnswer(null);
-            setShowResult(false);
-            setIsCorrect(false);
-        }, 1200);
+        }
+    };
+
+    const handleNext = () => {
+        if (onNext) {
+            onNext();
+        }
     };
 
     const getDifficultyColor = (difficulty) => {
-        switch (difficulty) {
+        switch (Number(difficulty)) {
             case 1: return 'easy';
             case 2: return 'medium';
             case 3: return 'hard';
@@ -41,23 +66,35 @@ function ChallengeCard({ challenge, onSubmit, disabled }) {
             'Atualidades': '🌎',
             'Português': '📚',
             'Inglês': '🇺🇸',
-            'Espanhol': '🇪🇸',
-            'Raízes do Brasil': '🌿',
+            'Física': '⚡',
+            'Química': '⚗️',
+            'Biologia': '🧬',
+            'História': '🏛️',
+            'Geografia': '🗺️',
+            'Filosofia': '💭',
+            'Sociologia': '👥',
+            'Artes': '🎨'
         };
         return icons[subject] || '📖';
     };
 
-    const options = ['A', 'B', 'C', 'D', 'E'].map((option) => ({
-        key: option,
-        text: challenge[`option${option}`],
-    })).filter((item) => item.text !== undefined && item.text !== null);
+    const options = [
+        { key: 'A', text: challenge.optionA ?? challenge.option_a },
+        { key: 'B', text: challenge.optionB ?? challenge.option_b },
+        { key: 'C', text: challenge.optionC ?? challenge.option_c },
+        { key: 'D', text: challenge.optionD ?? challenge.option_d },
+        { key: 'E', text: challenge.optionE ?? challenge.option_e },
+    ].filter((item) => item.text !== undefined && item.text !== null && item.text !== '');
+
+    const explanationText = challenge.explanation || challenge.description ||
+        `A alternativa correta é a (${correctAnswer}). Esta questão exercita competências e habilidades fundamentais da BNCC em ${challenge.subject || 'Conhecimentos Gerais'}.`;
 
     return (
         <div className={`challenge-card ${showResult ? 'result-mode' : ''}`}>
             <div className="challenge-header">
                 <div className="subject-badge">
                     <span className="subject-icon">{getSubjectIcon(challenge.subject)}</span>
-                    <span className="subject-name">{challenge.subject}</span>
+                    <span className="subject-name">{challenge.subject || 'Geral'}</span>
                 </div>
                 <div className={`difficulty-badge ${getDifficultyColor(challenge.difficulty)}`}>
                     {challenge.difficulty === 1 ? 'Fácil' : challenge.difficulty === 2 ? 'Médio' : 'Difícil'}
@@ -65,17 +102,17 @@ function ChallengeCard({ challenge, onSubmit, disabled }) {
             </div>
 
             <div className="challenge-content">
-                <h3 className="challenge-question">{challenge.question}</h3>
+                <h3 className="challenge-question">{challenge.question || challenge.text}</h3>
 
                 <div className="answers-grid">
                     {options.map((option) => {
                         const answerText = option.text;
                         const isSelected = selectedAnswer === option.key;
-                        const isCorrectAnswer = challenge.correctAnswer === option.key;
+                        const isThisCorrect = correctAnswer === option.key;
 
                         let buttonClass = 'answer-btn';
                         if (showResult) {
-                            if (isCorrectAnswer) {
+                            if (isThisCorrect) {
                                 buttonClass += ' correct';
                             } else if (isSelected && !isCorrect) {
                                 buttonClass += ' incorrect';
@@ -95,7 +132,7 @@ function ChallengeCard({ challenge, onSubmit, disabled }) {
                             >
                                 <span className="option-letter">{option.key}</span>
                                 <span className="option-text">{answerText}</span>
-                                {showResult && isCorrectAnswer && (
+                                {showResult && isThisCorrect && (
                                     <span className="correct-icon">✓</span>
                                 )}
                                 {showResult && isSelected && !isCorrect && (
@@ -108,19 +145,40 @@ function ChallengeCard({ challenge, onSubmit, disabled }) {
 
                 {showResult && (
                     <div className={`result-message ${isCorrect ? 'success' : 'error'}`}>
-                        {isCorrect ? (
-                            <>
-                                <span className="result-icon">🎉</span>
-                                <h4>Parabéns! Você acertou!</h4>
-                                <p>Você ganhou {challenge.xpReward ?? challenge.xp_reward} XP</p>
-                            </>
-                        ) : (
-                            <>
-                                <span className="result-icon">😅</span>
-                                <h4>Resposta incorreta ou tempo esgotado</h4>
-                                <p>{challenge.explanation || 'Analise cada alternativa e tente novamente na próxima questão.'}</p>
-                            </>
-                        )}
+                        <div className="result-header-row">
+                            <span className="result-icon">{isCorrect ? '🎉' : '💡'}</span>
+                            <div>
+                                <h4 className="result-title">
+                                    {isCorrect
+                                        ? 'Parabéns! Resposta Correta!'
+                                        : (selectedAnswer ? 'Resposta Incorreta' : 'Tempo Esgotado!')}
+                                </h4>
+                                <p className="result-xp-text">
+                                    {isCorrect
+                                        ? `+${challenge.xpReward ?? challenge.xp_reward ?? 15} XP conquistados!`
+                                        : `Alternativa correta: (${correctAnswer})`}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Explicação Pedagógica Clara */}
+                        <div className="pedagogical-box">
+                            <div className="pedagogical-label">
+                                <span>📖 Explicação Pedagógica & Resolução:</span>
+                            </div>
+                            <p className="pedagogical-text">{explanationText}</p>
+                        </div>
+
+                        {/* Botão de Avanço Manual Sem Pressa */}
+                        <div className="next-action-container">
+                            <button
+                                type="button"
+                                className="next-question-btn"
+                                onClick={handleNext}
+                            >
+                                {isLastQuestion ? '🏁 Finalizar & Ver Placar' : 'Próxima Questão ➡️'}
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>
@@ -128,7 +186,7 @@ function ChallengeCard({ challenge, onSubmit, disabled }) {
             <div className="challenge-footer">
                 <div className="xp-reward">
                     <span className="xp-icon">⭐</span>
-                    <span>{challenge.xpReward ?? challenge.xp_reward} XP</span>
+                    <span>Recompensa: {challenge.xpReward ?? challenge.xp_reward ?? 15} XP</span>
                 </div>
             </div>
         </div>

@@ -35,8 +35,23 @@ router.post('/:id/submit', authMiddleware, async (req, res) => {
             return res.status(400).json({ error: 'Desafio já foi completado' });
         }
         
-        const isCorrect = answer.toUpperCase() === challenge.correct_answer;
+        const isCorrect = (answer || '').toUpperCase() === (challenge.correct_answer || '').toUpperCase();
+        const explanation = challenge.explanation || `A alternativa correta é a (${challenge.correct_answer}). Esta questão reforça os conceitos essenciais da BNCC em ${challenge.subject || 'Conhecimentos Gerais'}.`;
         
+        // Registra a submissão para análise pedagógica do professor
+        if (pool.recordSubmission) {
+            pool.recordSubmission({
+                userId: req.userId,
+                challengeId: id,
+                question: challenge.question,
+                subject: challenge.subject || 'Geral',
+                topic: challenge.title || challenge.subject || 'Conceitos Fundamentais',
+                selectedAnswer: answer,
+                correctAnswer: challenge.correct_answer,
+                isCorrect: isCorrect
+            });
+        }
+
         if (isCorrect) {
             await pool.query(
                 `INSERT INTO user_progress (user_id, challenge_id, completed, score, completed_at) 
@@ -60,14 +75,16 @@ router.post('/:id/submit', authMiddleware, async (req, res) => {
             res.json({
                 correct: true,
                 xpEarned: challenge.xp_reward,
-                message: `🎉 Correto! Você ganhou ${challenge.xp_reward} XP!`,
+                message: `🎉 Correto! Você ganhou +${challenge.xp_reward} XP!`,
+                explanation: explanation,
                 user: userResult.rows[0]
             });
         } else {
             res.json({
                 correct: false,
                 xpEarned: 0,
-                message: `❌ Resposta incorreta! A resposta correta é: ${challenge.correct_answer}.`
+                message: `❌ Resposta incorreta! A resposta correta é: ${challenge.correct_answer}.`,
+                explanation: explanation
             });
         }
     } catch (error) {

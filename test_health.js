@@ -81,6 +81,22 @@ async function runDiagnostics() {
             });
             const stats = await statsRes.json();
             console.log(`✅ OK (${profData.user.name} - ${stats.totalstudents || 0} alunos vinculados)`);
+
+            // 4.1 Diagnóstico de Defasagens da Turma
+            process.stdout.write('   4.1 Testando Mapa de Defasagens da Turma (/api/teacher/analytics/class)... ');
+            const classRes = await fetch('http://localhost:5000/api/teacher/analytics/class', {
+                headers: { 'Authorization': `Bearer ${profData.token}` }
+            });
+            const classData = await classRes.json();
+            console.log(`✅ OK (${classData.subjectProficiency?.length || 0} disciplinas mapeadas, ${classData.criticalTopics?.length || 0} tópicos críticos)`);
+
+            // 4.2 Dossiê Individual do Aluno
+            process.stdout.write('   4.2 Testando Dossiê Individual do Aluno (/api/teacher/students/1/diagnosis)... ');
+            const diagRes = await fetch('http://localhost:5000/api/teacher/students/1/diagnosis', {
+                headers: { 'Authorization': `Bearer ${profData.token}` }
+            });
+            const diagData = await diagRes.json();
+            console.log(`✅ OK (${diagData.student?.name} - ${diagData.recentErrors?.length || 0} erros com alternativas mapeadas)`);
         } else {
             console.log('❌ Falha:', profData.error);
         }

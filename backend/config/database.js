@@ -68,6 +68,18 @@ const dbAdapter = {
             } catch (_) {}
         }
         await localDb.end();
+    },
+
+    recordSubmission(data) {
+        return localDb.recordSubmission(data);
+    },
+
+    getClassAnalytics() {
+        return localDb.getClassAnalytics();
+    },
+
+    getStudentDiagnosis(studentId) {
+        return localDb.getStudentDiagnosis(studentId);
     }
 };
 

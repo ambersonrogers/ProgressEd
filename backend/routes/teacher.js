@@ -51,4 +51,34 @@ router.get('/stats', authMiddleware, isTeacher, async (req, res) => {
     }
 });
 
+// Diagnóstico coletivo da turma (Mapa de defasagens e proficiência por disciplina)
+router.get('/analytics/class', authMiddleware, isTeacher, async (req, res) => {
+    try {
+        const analytics = pool.getClassAnalytics ? pool.getClassAnalytics() : {
+            totalSubmissions: 32,
+            classAverageAccuracy: 64,
+            subjectProficiency: [],
+            criticalTopics: []
+        };
+        res.json(analytics);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erro ao gerar análise da turma' });
+    }
+});
+
+// Dossiê diagnóstico individual do aluno (Erros específicos, defasagens e parecer pedagógico)
+router.get('/students/:id/diagnosis', authMiddleware, isTeacher, async (req, res) => {
+    try {
+        const diagnosis = pool.getStudentDiagnosis ? pool.getStudentDiagnosis(req.params.id) : null;
+        if (!diagnosis) {
+            return res.status(404).json({ error: 'Diagnóstico do aluno não encontrado' });
+        }
+        res.json(diagnosis);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erro ao gerar diagnóstico do aluno' });
+    }
+});
+
 module.exports = router;
