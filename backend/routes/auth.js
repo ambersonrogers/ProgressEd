@@ -1,7 +1,8 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const pool = require('../config/database');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'ProgressEd_JWT_Secret_Key_2026_Secure_Random_String';
 
 const router = express.Router();
 
@@ -25,7 +26,7 @@ router.post('/register', async (req, res) => {
         
         const token = jwt.sign(
             { id: result.rows[0].id, email: result.rows[0].email, role: result.rows[0].role },
-            process.env.JWT_SECRET,
+            JWT_SECRET,
             { expiresIn: '7d' }
         );
         
@@ -55,7 +56,7 @@ router.post('/login', async (req, res) => {
         
         const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },
-            process.env.JWT_SECRET,
+            JWT_SECRET,
             { expiresIn: '7d' }
         );
         

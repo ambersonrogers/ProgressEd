@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
-const DATA_DIR = path.join(__dirname, '../data');
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const DATA_DIR = isServerless ? path.join(os.tmpdir(), 'progressed_data') : path.join(__dirname, '../data');
 const DB_FILE = path.join(DATA_DIR, 'local_db.json');
 const SQL_SEED_FILE = path.join(__dirname, '../populate_challenges.sql');
 
@@ -86,9 +88,11 @@ class LocalDb {
   }
 
   init() {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
+    try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
+    } catch (_) {}
 
     if (fs.existsSync(DB_FILE)) {
       try {
@@ -439,9 +443,12 @@ class LocalDb {
 
   persist() {
     try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
       fs.writeFileSync(DB_FILE, JSON.stringify(this.data, null, 2), 'utf8');
     } catch (err) {
-      console.error('Erro ao salvar local_db.json:', err.message);
+      console.warn('⚠️ Aviso ao persistir dados locais:', err.message);
     }
   }
 

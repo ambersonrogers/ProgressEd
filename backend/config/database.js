@@ -6,17 +6,20 @@ let pool = null;
 let useLocalDb = false;
 let checkDone = false;
 
-// Se não houver DATABASE_URL ou se for explicitamente forçado local
-if (!process.env.DATABASE_URL || process.env.USE_LOCAL_DB === 'true') {
+const DEFAULT_REMOTE_URL = 'postgresql://postgres.bcwzzbqbfdzslsdbmdvv:ProjetoProgressEd2026@aws-1-sa-east-1.pooler.supabase.com:5432/postgres';
+const connectionString = process.env.DATABASE_URL || DEFAULT_REMOTE_URL;
+
+// Se for explicitamente forçado local
+if (process.env.USE_LOCAL_DB === 'true') {
     useLocalDb = true;
     checkDone = true;
     console.log('⚡ ProgressEd Backend: Utilizando Banco de Dados Local Resiliente (110 desafios BNCC carregados).');
 } else {
     try {
         pool = new Pool({
-            connectionString: process.env.DATABASE_URL,
+            connectionString: connectionString,
             ssl: { rejectUnauthorized: false },
-            connectionTimeoutMillis: 3500
+            connectionTimeoutMillis: 5000
         });
 
         // Teste inicial rápido de conexão
