@@ -1,5 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const pool = require('../config/database');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'ProgressEd_JWT_Secret_Key_2026_Secure_Random_String';
