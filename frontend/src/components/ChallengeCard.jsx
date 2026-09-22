@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { playCorrectSound, playWrongSound, playClickSound, playLevelUpSound } from '../utils/soundEffects';
 import './ChallengeCard.css';
 
 function formatTimer(seconds) {
@@ -34,6 +35,7 @@ function ChallengeCard({
     if (timeExpired && !showResult) {
       setShowResult(true);
       setIsCorrect(false);
+      playWrongSound();
       if (onSubmit) {
         onSubmit(challenge.id, null);
       }
@@ -46,6 +48,7 @@ function ChallengeCard({
 
   const handleSelectOption = (key) => {
     if (disabled || showResult) return;
+    playClickSound();
     setSelectedAnswer(key);
   };
 
@@ -55,6 +58,12 @@ function ChallengeCard({
     setShowResult(true);
     const correct = selectedAnswer.toUpperCase() === correctAnswer;
     setIsCorrect(correct);
+
+    if (correct) {
+      playCorrectSound();
+    } else {
+      playWrongSound();
+    }
 
     if (onSubmit) {
       await onSubmit(challenge.id, selectedAnswer);
@@ -95,7 +104,7 @@ function ChallengeCard({
     <div className="challenge-view-wrapper">
       {/* 1. TOP BAR (Logo, Tempo, Sequência, XP, Avatar) */}
       <header className="quiz-top-bar">
-        <div className="quiz-top-logo">
+        <div className="quiz-top-logo" onClick={onExit} style={{ cursor: 'pointer' }} title="Voltar ao Início">
           <div className="quiz-logo-box">
             <svg width="20" height="20" viewBox="0 0 40 40" fill="none">
               <path d="M12 8H24C28.4183 8 32 11.5817 32 16C32 20.4183 28.4183 24 24 24H18V32H12V8Z" fill="white" />
@@ -330,7 +339,14 @@ function ChallengeCard({
           <button
             type="button"
             className="btn-neon-green-submit"
-            onClick={onNext}
+            onClick={() => {
+              if (isLastQuestion) {
+                playLevelUpSound();
+              } else {
+                playClickSound();
+              }
+              onNext();
+            }}
           >
             <span>{isLastQuestion ? 'FINALIZAR' : 'PRÓXIMA QUESTÃO'}</span>
             <span>&rarr;</span>
