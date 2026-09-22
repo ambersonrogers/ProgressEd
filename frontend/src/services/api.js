@@ -1,10 +1,18 @@
 import axios from 'axios';
 
-// Usa a variável de ambiente do Vite, com fallback para localhost
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Detecta automaticamente se está rodando na Vercel (mesmo domínio) ou localmente
+const getBaseUrl = () => {
+    if (import.meta.env.VITE_API_URL) {
+        return import.meta.env.VITE_API_URL;
+    }
+    if (typeof window !== 'undefined' && (window.location.hostname.includes('vercel.app') || window.location.port === '')) {
+        return '/api';
+    }
+    return 'http://localhost:5000/api';
+};
 
 const api = axios.create({
-    baseURL: API_URL,
+    baseURL: getBaseUrl(),
 });
 
 // Interceptor para adicionar token automaticamente
