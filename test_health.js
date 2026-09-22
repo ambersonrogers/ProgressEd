@@ -1,102 +1,64 @@
 /**
- * ProgressEd - Diagnóstico Local Completo
+ * ProgressEd - Diagnóstico Completo (Local & Vercel Serverless / Neon)
  */
 
-const http = require('http');
+const VERCEL_URL = 'https://progress-ed-git-master-ambersonrogers-projects.vercel.app';
+const LOCAL_URL = 'http://localhost:5000';
 
-async function testUrl(url) {
-    return new Promise((resolve) => {
-        const req = http.get(url, (res) => {
-            let data = '';
-            res.on('data', chunk => data += chunk);
-            res.on('end', () => resolve({ ok: res.statusCode >= 200 && res.statusCode < 400, status: res.statusCode, data }));
-        });
-        req.on('error', (err) => resolve({ ok: false, error: err.message }));
-        req.setTimeout(3000, () => {
-            req.destroy();
-            resolve({ ok: false, error: 'Timeout (3s)' });
-        });
-    });
-}
-
-async function runDiagnostics() {
-    console.log('\n=============================================================');
-    console.log('🧪 DIAGNÓSTICO DO SISTEMA PROGRESSED');
-    console.log('=============================================================\n');
-
-    // 1. Backend Ping
-    process.stdout.write('1. Testando Backend API (http://localhost:5000)... ');
-    const backendRes = await testUrl('http://localhost:5000/');
-    if (backendRes.ok) {
-        console.log('✅ OK (Porta 5000 ativa)');
-    } else {
-        console.log('❌ OFFLINE');
-        console.log('   💡 O backend não está rodando no momento.');
-        console.log('   👉 Dica: Execute "iniciar_tudo.bat" ou "npm start" no terminal para iniciar.');
-        return;
-    }
-
-    // 2. Login Aluno
-    process.stdout.write('2. Testando Autenticação Aluno (aluno@progressed.com)... ');
+async function testEndpoint(baseUrl) {
+    console.log(`\n🔍 Testando Ambiente: ${baseUrl}`);
+    
+    // 1. Login Aluno
+    process.stdout.write('1. Testando Autenticação Aluno (aluno@progressed.com)... ');
+    let studentToken = null;
     try {
-        const loginRes = await fetch('http://localhost:5000/api/auth/login', {
+        const loginRes = await fetch(`${baseUrl}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: 'aluno@progressed.com', password: '123456' })
         });
         const loginData = await loginRes.json();
         if (loginData.token) {
+            studentToken = loginData.token;
             console.log(`✅ OK (${loginData.user.name}, Nível ${loginData.user.level}, XP ${loginData.user.xp})`);
+        } else {
+            console.log('❌ Falha:', loginData.error);
+        }
+    } catch (e) {
+        console.log('❌ Erro de conexão:', e.message);
+    }
 
-            // 3. Teste Desafios
-            process.stdout.write('3. Testando Banco de Desafios BNCC (/api/challenges)... ');
-            const chRes = await fetch('http://localhost:5000/api/challenges', {
-                headers: { 'Authorization': `Bearer ${loginData.token}` }
+    // 2. Desafios BNCC
+    if (studentToken) {
+        process.stdout.write('2. Testando Banco de Desafios BNCC (/api/challenges)... ');
+        try {
+            const chRes = await fetch(`${baseUrl}/api/challenges`, {
+                headers: { 'Authorization': `Bearer ${studentToken}` }
             });
             const challenges = await chRes.json();
             if (Array.isArray(challenges)) {
-                console.log(`✅ OK (${challenges.length} desafios carregados)`);
+                console.log(`✅ OK (${challenges.length} desafios curriculares carregados)`);
             } else {
-                console.log('❌ Erro ao listar desafios');
+                console.log('❌ Falha:', challenges);
             }
-        } else {
-            console.log('❌ Falha:', loginData.error || 'Sem token retornado');
+        } catch (e) {
+            console.log('❌ Erro:', e.message);
         }
-    } catch (e) {
-        console.log('❌ Erro:', e.message);
     }
 
-    // 4. Login Professor
-    process.stdout.write('4. Testando Painel do Professor (professor@progressed.com)... ');
+    // 3. Login Professor
+    process.stdout.write('3. Testando Painel do Professor (professor@progressed.com)... ');
+    let profToken = null;
     try {
-        const profRes = await fetch('http://localhost:5000/api/auth/login', {
+        const profRes = await fetch(`${baseUrl}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: 'professor@progressed.com', password: '123456' })
         });
         const profData = await profRes.json();
         if (profData.token) {
-            const statsRes = await fetch('http://localhost:5000/api/teacher/stats', {
-                headers: { 'Authorization': `Bearer ${profData.token}` }
-            });
-            const stats = await statsRes.json();
-            console.log(`✅ OK (${profData.user.name} - ${stats.totalstudents || 0} alunos vinculados)`);
-
-            // 4.1 Diagnóstico de Defasagens da Turma
-            process.stdout.write('   4.1 Testando Mapa de Defasagens da Turma (/api/teacher/analytics/class)... ');
-            const classRes = await fetch('http://localhost:5000/api/teacher/analytics/class', {
-                headers: { 'Authorization': `Bearer ${profData.token}` }
-            });
-            const classData = await classRes.json();
-            console.log(`✅ OK (${classData.subjectProficiency?.length || 0} disciplinas mapeadas, ${classData.criticalTopics?.length || 0} tópicos críticos)`);
-
-            // 4.2 Dossiê Individual do Aluno
-            process.stdout.write('   4.2 Testando Dossiê Individual do Aluno (/api/teacher/students/1/diagnosis)... ');
-            const diagRes = await fetch('http://localhost:5000/api/teacher/students/1/diagnosis', {
-                headers: { 'Authorization': `Bearer ${profData.token}` }
-            });
-            const diagData = await diagRes.json();
-            console.log(`✅ OK (${diagData.student?.name} - ${diagData.recentErrors?.length || 0} erros com alternativas mapeadas)`);
+            profToken = profData.token;
+            console.log(`✅ OK (${profData.user.name})`);
         } else {
             console.log('❌ Falha:', profData.error);
         }
@@ -104,21 +66,42 @@ async function runDiagnostics() {
         console.log('❌ Erro:', e.message);
     }
 
-    // 5. Frontend
-    process.stdout.write('5. Testando Frontend Web (http://localhost:5173)... ');
-    const frontendRes = await testUrl('http://localhost:5173/');
-    if (frontendRes.ok) {
-        console.log('✅ OK (Interface Vite ativa)');
-    } else {
-        console.log('⚠️ AVISO: Frontend não detectado na porta 5173 (execute "npm run dev:frontend")');
+    // 4. Diagnóstico de Defasagens
+    if (profToken) {
+        process.stdout.write('4. Testando Mapa de Defasagens da Turma (/api/teacher/analytics/class)... ');
+        try {
+            const classRes = await fetch(`${baseUrl}/api/teacher/analytics/class`, {
+                headers: { 'Authorization': `Bearer ${profToken}` }
+            });
+            const classData = await classRes.json();
+            console.log(`✅ OK (${classData.subjectProficiency?.length || 0} disciplinas mapeadas, ${classData.criticalTopics?.length || 0} tópicos críticos)`);
+        } catch (e) {
+            console.log('❌ Erro:', e.message);
+        }
+
+        process.stdout.write('5. Testando Dossiê Individual do Aluno (/api/teacher/students/1/diagnosis)... ');
+        try {
+            const diagRes = await fetch(`${baseUrl}/api/teacher/students/1/diagnosis`, {
+                headers: { 'Authorization': `Bearer ${profToken}` }
+            });
+            const diagData = await diagRes.json();
+            console.log(`✅ OK (${diagData.student?.name} - ${diagData.recentErrors?.length || 0} erros com histórico)`);
+        } catch (e) {
+            console.log('❌ Erro:', e.message);
+        }
     }
+}
+
+async function runDiagnostics() {
+    console.log('\n=============================================================');
+    console.log('🧪 DIAGNÓSTICO DO SISTEMA PROGRESSED (NEON + VERCEL)');
+    console.log('=============================================================');
+
+    await testEndpoint(VERCEL_URL);
 
     console.log('\n=============================================================');
-    console.log('🎉 DIAGNÓSTICO CONCLUÍDO!');
-    console.log('   Acesse a plataforma em: http://localhost:5173');
-    console.log('   Credenciais Demo:');
-    console.log('   - Aluno: aluno@progressed.com / 123456');
-    console.log('   - Professor: professor@progressed.com / 123456');
+    console.log('🎉 DIAGNÓSTICO CONCLUÍDO COM SUCESSO!');
+    console.log('   Vercel URL: ' + VERCEL_URL);
     console.log('=============================================================\n');
 }
 

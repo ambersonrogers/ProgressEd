@@ -1,565 +1,734 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import './TeacherDashboard.css';
 
 const DEFAULT_TEACHER_STATS = {
-    totalStudents: 8,
-    avgXp: 345,
-    avgLevel: 3,
-    totalCompleted: 32
+  totalStudents: 8,
+  avgXp: 345,
+  avgLevel: 3,
+  totalCompleted: 32
 };
 
 const DEFAULT_CLASS_ANALYTICS = {
-    totalSubmissions: 32,
-    totalCorrect: 16,
-    totalWrong: 16,
-    classAverageAccuracy: 50,
-    subjectProficiency: [
-        { subject: 'Física', total: 10, correct: 3, wrong: 7, accuracyRate: 30, status: 'critico' },
-        { subject: 'Matemática', total: 8, correct: 3, wrong: 5, accuracyRate: 38, status: 'critico' },
-        { subject: 'Química', total: 4, correct: 1, wrong: 3, accuracyRate: 25, status: 'critico' },
-        { subject: 'Biologia', total: 1, correct: 0, wrong: 1, accuracyRate: 0, status: 'critico' },
-        { subject: 'História', total: 4, correct: 4, wrong: 0, accuracyRate: 100, status: 'excelente' },
-        { subject: 'Geografia', total: 2, correct: 2, wrong: 0, accuracyRate: 100, status: 'excelente' },
-        { subject: 'Português', total: 3, correct: 3, wrong: 0, accuracyRate: 100, status: 'excelente' }
-    ],
-    criticalTopics: [
-        { topic: 'Eletrodinâmica', subject: 'Física', wrongCount: 4 },
-        { topic: 'Dinâmica e Leis de Newton', subject: 'Física', wrongCount: 3 },
-        { topic: 'Cálculo e Funções', subject: 'Matemática', wrongCount: 3 },
-        { topic: 'Funções Inorgânicas e pH', subject: 'Química', wrongCount: 3 },
-        { topic: 'Equações Quadráticas', subject: 'Matemática', wrongCount: 2 }
-    ]
+  totalSubmissions: 32,
+  totalCorrect: 16,
+  totalWrong: 16,
+  classAverageAccuracy: 50,
+  subjectProficiency: [
+    { subject: 'Física', total: 10, correct: 3, wrong: 7, accuracyRate: 30, status: 'critico' },
+    { subject: 'Matemática', total: 8, correct: 3, wrong: 5, accuracyRate: 38, status: 'critico' },
+    { subject: 'Química', total: 4, correct: 1, wrong: 3, accuracyRate: 25, status: 'critico' },
+    { subject: 'Biologia', total: 1, correct: 0, wrong: 1, accuracyRate: 0, status: 'critico' },
+    { subject: 'História', total: 4, correct: 4, wrong: 0, accuracyRate: 100, status: 'excelente' },
+    { subject: 'Geografia', total: 2, correct: 2, wrong: 0, accuracyRate: 100, status: 'excelente' },
+    { subject: 'Português', total: 3, correct: 3, wrong: 0, accuracyRate: 100, status: 'excelente' }
+  ],
+  criticalTopics: [
+    { topic: 'Eletrodinâmica', subject: 'Física', wrongCount: 4 },
+    { topic: 'Dinâmica e Leis de Newton', subject: 'Física', wrongCount: 3 },
+    { topic: 'Cálculo e Funções', subject: 'Matemática', wrongCount: 3 },
+    { topic: 'Funções Inorgânicas e pH', subject: 'Química', wrongCount: 3 },
+    { topic: 'Equações Quadráticas', subject: 'Matemática', wrongCount: 2 }
+  ]
 };
 
-const DEFAULT_STUDENTS = [
-    { id: 1, name: 'Amberson Rogers', email: 'aluno@progressed.com', xp: 420, level: 4, completed_challenges: 7, total_answers: 12, accuracy_rate: 58 },
-    { id: 6, name: 'Kelly Lorrany', email: 'kelly@escola.com', xp: 520, level: 5, completed_challenges: 5, total_answers: 5, accuracy_rate: 100 },
-    { id: 7, name: 'Weldes Reis', email: 'weldes@escola.com', xp: 380, level: 4, completed_challenges: 6, total_answers: 9, accuracy_rate: 67 },
-    { id: 4, name: 'Maria Santos', email: 'maria@test.com', xp: 310, level: 3, completed_challenges: 3, total_answers: 4, accuracy_rate: 75 },
-    { id: 3, name: 'João Silva', email: 'joao@test.com', xp: 280, level: 3, completed_challenges: 3, total_answers: 6, accuracy_rate: 50 },
-    { id: 8, name: 'Ana Beatriz Sousa', email: 'ana.beatriz@escola.com', xp: 260, level: 3, completed_challenges: 3, total_answers: 5, accuracy_rate: 60 },
-    { id: 5, name: 'Pedro Costa', email: 'pedro@test.com', xp: 150, level: 2, completed_challenges: 1, total_answers: 5, accuracy_rate: 20 }
+const DEFAULT_STUDENTS_LIST = [
+  { id: 1, name: 'Alden Johnson', completion: 92, status: 'active', color: 'blue' },
+  { id: 2, name: 'Sarah Miller', completion: 85, status: 'active', color: 'green' },
+  { id: 3, name: 'Ethan Walker', completion: 78, status: 'active', color: 'purple' },
+  { id: 4, name: 'Olivia Lewis', completion: 62, status: 'needs-help', color: 'amber' },
+  { id: 5, name: 'James Martinez', completion: 55, status: 'needs-help', color: 'amber' },
+  { id: 6, name: 'Hannah Scott', completion: 45, status: 'needs-help', color: 'rose' },
+  { id: 7, name: 'Tyler White', completion: 100, status: 'completed', color: 'blue' },
+  { id: 8, name: 'Amberson Rogers', completion: 88, status: 'active', color: 'green' }
 ];
 
 function TeacherDashboard({ user, onLogout }) {
-    const [activeTab, setActiveTab] = useState('analytics'); // 'analytics' | 'students'
-    const [students, setStudents] = useState(DEFAULT_STUDENTS);
-    const [stats, setStats] = useState(DEFAULT_TEACHER_STATS);
-    const [classAnalytics, setClassAnalytics] = useState(DEFAULT_CLASS_ANALYTICS);
-    const [loading, setLoading] = useState(true);
+  const [activeMenu, setActiveMenu] = useState('painel');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [studentDiagnosis, setStudentDiagnosis] = useState(null);
+  const [loadingDiagnosis, setLoadingDiagnosis] = useState(false);
+  const [selectedClass, setSelectedClass] = useState('3em');
 
-    // Dossiê do aluno selecionado
-    const [selectedStudentId, setSelectedStudentId] = useState(null);
-    const [studentDiagnosis, setStudentDiagnosis] = useState(null);
-    const [diagnosisLoading, setDiagnosisLoading] = useState(false);
+  const [stats, setStats] = useState(DEFAULT_TEACHER_STATS);
+  const [classAnalytics, setClassAnalytics] = useState(DEFAULT_CLASS_ANALYTICS);
+  const [students, setStudents] = useState(DEFAULT_STUDENTS_LIST);
 
-    // Filtro e busca
-    const [searchTerm, setSearchTerm] = useState('');
+  useEffect(() => {
+    loadAllData();
+  }, []);
 
-    useEffect(() => {
-        loadAllData();
-    }, []);
+  const loadAllData = async () => {
+    try {
+      const [statsRes, analyticsRes, studentsRes] = await Promise.allSettled([
+        api.get('/teacher/stats'),
+        api.get('/teacher/analytics/class'),
+        api.get('/teacher/students')
+      ]);
 
-    const loadAllData = async () => {
-        setLoading(true);
-        try {
-            const [statsRes, studentsRes, analyticsRes] = await Promise.allSettled([
-                api.get('/teacher/stats'),
-                api.get('/teacher/students'),
-                api.get('/teacher/analytics/class')
-            ]);
+      if (statsRes.status === 'fulfilled' && statsRes.value.data) {
+        setStats(statsRes.value.data);
+      }
+      if (analyticsRes.status === 'fulfilled' && analyticsRes.value.data) {
+        setClassAnalytics(analyticsRes.value.data);
+      }
+      if (studentsRes.status === 'fulfilled' && Array.isArray(studentsRes.value.data) && studentsRes.value.data.length > 0) {
+        // Mapeia para o formato visual
+        const mapped = studentsRes.value.data.map((s, idx) => ({
+          id: s.id,
+          name: s.name,
+          completion: s.accuracy_rate || Math.min(100, Math.round(((s.completed_challenges || 1) / 10) * 100)),
+          status: (s.accuracy_rate || 50) < 60 ? 'needs-help' : (s.completed_challenges || 0) >= 10 ? 'completed' : 'active',
+          color: ['blue', 'green', 'purple', 'amber', 'rose'][idx % 5]
+        }));
+        setStudents(mapped);
+      }
+    } catch (err) {
+      console.warn('Usando métricas demonstrativas:', err.message);
+    }
+  };
 
-            if (statsRes.status === 'fulfilled' && statsRes.value.data) {
-                setStats(statsRes.value.data);
-            }
-            if (studentsRes.status === 'fulfilled' && Array.isArray(studentsRes.value.data) && studentsRes.value.data.length > 0) {
-                setStudents(studentsRes.value.data);
-            }
-            if (analyticsRes.status === 'fulfilled' && analyticsRes.value.data) {
-                setClassAnalytics(analyticsRes.value.data);
-            }
-        } catch (error) {
-            console.warn('Usando dados diagnósticos demonstrativos:', error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleOpenStudentDossier = async (student) => {
+    setSelectedStudent(student);
+    setLoadingDiagnosis(true);
+    try {
+      const res = await api.get(`/teacher/students/${student.id}/diagnosis`);
+      if (res.data) {
+        setStudentDiagnosis(res.data);
+      }
+    } catch (err) {
+      setStudentDiagnosis({
+        student: { name: student.name, email: `${student.name.toLowerCase().replace(/\s+/g, '.')}@escola.com` },
+        accuracyRate: student.completion,
+        totalAnswers: 14,
+        totalCorrect: Math.round(14 * (student.completion / 100)),
+        totalWrong: 14 - Math.round(14 * (student.completion / 100)),
+        subjectProficiency: [
+          { subject: 'Física', total: 6, correct: 2, wrong: 4, accuracyRate: 33, status: 'critico' },
+          { subject: 'Matemática', total: 4, correct: 2, wrong: 2, accuracyRate: 50, status: 'atencao' },
+          { subject: 'Português', total: 4, correct: 4, wrong: 0, accuracyRate: 100, status: 'excelente' }
+        ],
+        recentErrors: [
+          {
+            id: 1,
+            question: 'Qual é a unidade padrão de força no Sistema Internacional (SI)?',
+            subject: 'Física',
+            topic: 'Dinâmica e Leis de Newton',
+            selected_answer: 'B (Joule)',
+            correct_answer: 'A (Newton)',
+            answered_at: new Date().toISOString()
+          },
+          {
+            id: 2,
+            question: 'De acordo com a Primeira Lei de Ohm, qual é a fórmula correta?',
+            subject: 'Física',
+            topic: 'Eletrodinâmica',
+            selected_answer: 'C (F = m × a)',
+            correct_answer: 'A (V = I × R)',
+            answered_at: new Date().toISOString()
+          }
+        ],
+        pedagogicalSummary: `⚠️ Alerta de Defasagem Curricular: O aluno ${student.name} demonstrou fragilidades conceituais em Ciências da Natureza (Física - Circuitos e Mecânica). Recomenda-se atividades de reforço contextualizadas.`
+      });
+    } finally {
+      setLoadingDiagnosis(false);
+    }
+  };
 
-    const handleOpenDiagnosis = async (studentId) => {
-        setSelectedStudentId(studentId);
-        setDiagnosisLoading(true);
-        try {
-            const res = await api.get(`/teacher/students/${studentId}/diagnosis`);
-            if (res.data) {
-                setStudentDiagnosis(res.data);
-            }
-        } catch (err) {
-            // Fallback para diagnóstico offline
-            const student = students.find(s => Number(s.id) === Number(studentId));
-            setStudentDiagnosis({
-                student: student || { name: 'Aluno', email: '' },
-                totalAnswers: student?.total_answers || 10,
-                totalCorrect: student?.completed_challenges || 6,
-                totalWrong: (student?.total_answers || 10) - (student?.completed_challenges || 6),
-                accuracyRate: student?.accuracy_rate || 60,
-                subjectProficiency: [
-                    { subject: 'Física', total: 4, correct: 1, wrong: 3, accuracyRate: 25, status: 'critico' },
-                    { subject: 'Matemática', total: 4, correct: 2, wrong: 2, accuracyRate: 50, status: 'atencao' },
-                    { subject: 'Português', total: 3, correct: 3, wrong: 0, accuracyRate: 100, status: 'excelente' },
-                    { subject: 'História', total: 2, correct: 2, wrong: 0, accuracyRate: 100, status: 'excelente' }
-                ],
-                recentErrors: [
-                    {
-                        id: 1,
-                        question: 'Qual é a unidade de força no SI?',
-                        subject: 'Física',
-                        topic: 'Dinâmica e Leis de Newton',
-                        selected_answer: 'B (Joule)',
-                        correct_answer: 'A (Newton)',
-                        answered_at: new Date().toISOString()
-                    },
-                    {
-                        id: 2,
-                        question: 'Qual é a lei de Ohm?',
-                        subject: 'Física',
-                        topic: 'Eletrodinâmica',
-                        selected_answer: 'C (F = m × a)',
-                        correct_answer: 'A (V = I × R)',
-                        answered_at: new Date().toISOString()
-                    }
-                ],
-                pedagogicalSummary: `⚠️ Alerta de Defasagem: O estudante apresenta maior índice de erros em Ciências da Natureza (Física). Recomenda-se acompanhamento focado na aplicação das Leis de Newton e circuitos elétricos básicos. Mantém ótimo desempenho em Linguagens e Humanas.`
-            });
-        } finally {
-            setDiagnosisLoading(false);
-        }
-    };
+  const filteredStudents = students.filter(s => {
+    const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || s.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
-    const handlePrintDiagnosis = () => {
-        window.print();
-    };
-
-    const filteredStudents = students.filter(s =>
-        s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    return (
-        <div className="min-h-screen bg-slate-950 text-white">
-            <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                
-                {/* Header do Professor */}
-                <header className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-[2rem] border border-white/10 bg-slate-900/90 p-6 shadow-glow backdrop-blur-xl">
-                    <div className="flex items-center gap-4">
-                        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-2xl shadow-lg">
-                            👨‍🏫
-                        </div>
-                        <div>
-                            <span className="text-xs uppercase tracking-[0.3em] text-violet-300 font-bold">Painel de Avaliação & Diagnóstico Docente</span>
-                            <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Prof. {user?.name || 'Pedro Brandão'}</h1>
-                            <p className="text-xs sm:text-sm text-slate-400">Centro Educa Mais Paulo Freire • Acompanhamento da Aprendizagem BNCC</p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={loadAllData}
-                            className="rounded-xl bg-slate-800 px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-300 hover:bg-slate-700 hover:text-white transition"
-                            title="Recarregar Métricas"
-                        >
-                            🔄 Atualizar Dados
-                        </button>
-                        <button
-                            onClick={onLogout}
-                            className="rounded-xl bg-rose-900/60 border border-rose-500/30 px-4 py-2.5 text-xs sm:text-sm font-semibold text-rose-200 hover:bg-rose-800 transition"
-                        >
-                            Sair
-                        </button>
-                    </div>
-                </header>
-
-                {/* Cards de Métricas Gerais da Turma */}
-                <div className="mb-8 grid gap-4 grid-cols-2 lg:grid-cols-4">
-                    <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-5 shadow-lg">
-                        <div className="flex items-center justify-between text-slate-400">
-                            <span className="text-xs sm:text-sm font-semibold">Total de Alunos</span>
-                            <span className="text-xl">👥</span>
-                        </div>
-                        <p className="mt-2 text-3xl font-extrabold text-white">{stats.totalStudents || students.length}</p>
-                        <p className="mt-1 text-xs text-slate-500">Matriculados na turma</p>
-                    </div>
-
-                    <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-5 shadow-lg">
-                        <div className="flex items-center justify-between text-slate-400">
-                            <span className="text-xs sm:text-sm font-semibold">Média de Aproveitamento</span>
-                            <span className="text-xl">🎯</span>
-                        </div>
-                        <p className="mt-2 text-3xl font-extrabold text-emerald-400">{classAnalytics.classAverageAccuracy}%</p>
-                        <p className="mt-1 text-xs text-slate-500">Taxa média de acertos</p>
-                    </div>
-
-                    <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-5 shadow-lg">
-                        <div className="flex items-center justify-between text-slate-400">
-                            <span className="text-xs sm:text-sm font-semibold">Média de XP por Aluno</span>
-                            <span className="text-xl">⭐</span>
-                        </div>
-                        <p className="mt-2 text-3xl font-extrabold text-amber-400">{stats.avgXp || 350}</p>
-                        <p className="mt-1 text-xs text-slate-500">Engajamento gamificado</p>
-                    </div>
-
-                    <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-5 shadow-lg">
-                        <div className="flex items-center justify-between text-slate-400">
-                            <span className="text-xs sm:text-sm font-semibold">Questões Submetidas</span>
-                            <span className="text-xl">📝</span>
-                        </div>
-                        <p className="mt-2 text-3xl font-extrabold text-violet-400">{classAnalytics.totalSubmissions || stats.totalCompleted || 32}</p>
-                        <p className="mt-1 text-xs text-slate-500">Respostas avaliadas</p>
-                    </div>
-                </div>
-
-                {/* Seletor de Abas */}
-                <div className="mb-6 flex gap-3 border-b border-white/10 pb-4">
-                    <button
-                        onClick={() => setActiveTab('analytics')}
-                        className={`inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold transition-all ${
-                            activeTab === 'analytics'
-                                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-600/30'
-                                : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-850'
-                        }`}
-                    >
-                        <span>📊 Diagnóstico da Turma & Defasagens</span>
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('students')}
-                        className={`inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold transition-all ${
-                            activeTab === 'students'
-                                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-600/30'
-                                : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-850'
-                        }`}
-                    >
-                        <span>👥 Acompanhamento Individual ({students.length} Alunos)</span>
-                    </button>
-                </div>
-
-                {/* ============================================================== */}
-                {/* ABA 1: DIAGNÓSTICO DA TURMA & MAPA DE DEFASAGENS               */}
-                {/* ============================================================== */}
-                {activeTab === 'analytics' && (
-                    <div className="space-y-8">
-                        {/* Seção Gráfica: Proficiência por Disciplina */}
-                        <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6 sm:p-8 shadow-xl">
-                            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-                                <div>
-                                    <h2 className="text-xl sm:text-2xl font-bold text-white">Mapa de Proficiência por Disciplina</h2>
-                                    <p className="text-xs sm:text-sm text-slate-400">Identificação das áreas com maior índice de acertos e defasagens críticas da turma.</p>
-                                </div>
-                                <div className="flex items-center gap-4 text-xs font-semibold">
-                                    <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-rose-500 inline-block" /> Crítico (&lt;50%)</span>
-                                    <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-amber-500 inline-block" /> Atenção (50-70%)</span>
-                                    <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-emerald-500 inline-block" /> Bom (&gt;70%)</span>
-                                </div>
-                            </div>
-
-                            <div className="space-y-5">
-                                {classAnalytics.subjectProficiency.map((item) => {
-                                    const isCrit = item.status === 'critico';
-                                    const isAtt = item.status === 'atencao';
-                                    const colorBar = isCrit ? 'from-rose-600 to-red-500' : isAtt ? 'from-amber-600 to-yellow-500' : 'from-emerald-500 to-teal-500';
-                                    const badgeBg = isCrit ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' : isAtt ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
-                                    const labelStatus = isCrit ? 'Defasagem Crítica' : isAtt ? 'Requer Atenção' : 'Excelente Domínio';
-
-                                    return (
-                                        <div key={item.subject} className="rounded-2xl bg-slate-950/60 p-4 border border-white/5">
-                                            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="font-bold text-white text-base">{item.subject}</span>
-                                                    <span className={`text-xs px-2.5 py-0.5 rounded-full border font-semibold ${badgeBg}`}>
-                                                        {labelStatus}
-                                                    </span>
-                                                </div>
-                                                <div className="text-right">
-                                                    <span className="font-extrabold text-lg text-white">{item.accuracyRate}%</span>
-                                                    <span className="text-xs text-slate-400 ml-2">({item.correct} acertos / {item.total} respostas)</span>
-                                                </div>
-                                            </div>
-
-                                            {/* Barra de Progresso Visual */}
-                                            <div className="h-3.5 w-full overflow-hidden rounded-full bg-slate-800/90">
-                                                <div
-                                                    className={`h-3.5 rounded-full bg-gradient-to-r ${colorBar} transition-all duration-500`}
-                                                    style={{ width: `${Math.max(5, item.accuracyRate)}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Seção 2: Top Tópicos com Maior Índice de Erros */}
-                        <div className="grid gap-6 lg:grid-cols-2">
-                            <div className="rounded-3xl border border-rose-500/20 bg-gradient-to-br from-rose-950/30 via-slate-900/90 to-slate-900/90 p-6 sm:p-8 shadow-xl">
-                                <div className="mb-4 flex items-center gap-3">
-                                    <span className="text-3xl">⚠️</span>
-                                    <div>
-                                        <h3 className="text-xl font-bold text-white">Tópicos com Maior Defasagem na Turma</h3>
-                                        <p className="text-xs text-slate-400">Conceitos onde os estudantes mais cometeram erros nas atividades.</p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-3 mt-5">
-                                    {classAnalytics.criticalTopics.map((top, idx) => (
-                                        <div key={idx} className="flex items-center justify-between rounded-xl bg-slate-950/70 p-3.5 border border-rose-500/20">
-                                            <div>
-                                                <p className="font-semibold text-white text-sm">{top.topic}</p>
-                                                <span className="text-xs text-violet-400 font-medium">Disciplina: {top.subject}</span>
-                                            </div>
-                                            <div className="text-right">
-                                                <span className="rounded-lg bg-rose-500/20 px-2.5 py-1 text-xs font-bold text-rose-300 border border-rose-500/30">
-                                                    {top.wrongCount} erros registrados
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Diretrizes Pedagógicas para o Docente */}
-                            <div className="rounded-3xl border border-violet-500/20 bg-gradient-to-br from-violet-950/30 via-slate-900/90 to-slate-900/90 p-6 sm:p-8 shadow-xl flex flex-col justify-between">
-                                <div>
-                                    <div className="mb-4 flex items-center gap-3">
-                                        <span className="text-3xl">💡</span>
-                                        <div>
-                                            <h3 className="text-xl font-bold text-white">Plano de Intervenção Pedagógica</h3>
-                                            <p className="text-xs text-slate-400">Recomendações automatizadas com base no diagnóstico da BNCC.</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-3.5 text-sm text-slate-300 leading-relaxed mt-4">
-                                        <p className="rounded-xl bg-slate-950/50 p-3.5 border border-white/5">
-                                            📌 <strong>Física & Matemática:</strong> Recomenda-se realizar uma oficina de resolução comentada de exercícios focada em <em>Leis de Newton</em> e <em>Equações Quadráticas</em>, aproveitando o feedback imediato da plataforma.
-                                        </p>
-                                        <p className="rounded-xl bg-slate-950/50 p-3.5 border border-white/5">
-                                            📌 <strong>Química:</strong> Propor atividade prática demonstrativa de funções inorgânicas e escala de pH para contextualizar os erros conceituais identificados.
-                                        </p>
-                                        <p className="rounded-xl bg-slate-950/50 p-3.5 border border-white/5">
-                                            📌 <strong>Humanas e Linguagens:</strong> A turma demonstrou forte proficiência (&gt;80%). Sugere-se desafiar os alunos com questões interdisciplinares de nível difícil.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="mt-6 pt-4 border-t border-white/10 flex justify-end">
-                                    <button
-                                        onClick={() => setActiveTab('students')}
-                                        className="rounded-xl bg-violet-600 hover:bg-violet-500 px-5 py-2.5 text-sm font-bold text-white transition shadow-md"
-                                    >
-                                        Ver Alunos Individualmente ➡️
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* ============================================================== */}
-                {/* ABA 2: ACOMPANHAMENTO INDIVIDUAL DE ALUNOS                      */}
-                {/* ============================================================== */}
-                {activeTab === 'students' && (
-                    <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6 sm:p-8 shadow-xl">
-                        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-                            <div>
-                                <h2 className="text-2xl font-bold text-white">Alunos da Turma (Centro Educa Mais Paulo Freire)</h2>
-                                <p className="text-xs sm:text-sm text-slate-400">Clique em "Avaliar Aluno" para inspecionar os erros exatos, disciplinas críticas e parecer individual.</p>
-                            </div>
-
-                            <input
-                                type="text"
-                                placeholder="🔍 Buscar aluno por nome ou e-mail..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full sm:w-80 rounded-xl border border-white/10 bg-slate-950 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-violet-500 focus:outline-none"
-                            />
-                        </div>
-
-                        {/* Tabela de Alunos */}
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm text-slate-300">
-                                <thead className="bg-slate-950/80 uppercase text-xs text-slate-400 border-b border-white/10">
-                                    <tr>
-                                        <th className="py-3.5 px-4">Estudante</th>
-                                        <th className="py-3.5 px-4">Nível</th>
-                                        <th className="py-3.5 px-4">XP Total</th>
-                                        <th className="py-3.5 px-4">Taxa de Acerto</th>
-                                        <th className="py-3.5 px-4">Desafios Feitos</th>
-                                        <th className="py-3.5 px-4 text-center">Ação</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-white/5">
-                                    {filteredStudents.map((s) => {
-                                        const rate = s.accuracy_rate || 50;
-                                        const rateBadge = rate < 50
-                                            ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
-                                            : rate <= 70
-                                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                                            : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
-
-                                        return (
-                                            <tr key={s.id} className="hover:bg-slate-800/40 transition">
-                                                <td className="py-4 px-4 font-semibold text-white">
-                                                    <div>{s.name}</div>
-                                                    <div className="text-xs text-slate-500 font-normal">{s.email}</div>
-                                                </td>
-                                                <td className="py-4 px-4">
-                                                    <span className="rounded-lg bg-violet-500/10 px-2.5 py-1 text-xs font-bold text-violet-300 border border-violet-500/20">
-                                                        Nível {s.level}
-                                                    </span>
-                                                </td>
-                                                <td className="py-4 px-4 font-bold text-amber-400">
-                                                    ⭐ {s.xp} XP
-                                                </td>
-                                                <td className="py-4 px-4">
-                                                    <span className={`rounded-full px-2.5 py-1 text-xs font-bold border ${rateBadge}`}>
-                                                        {rate}%
-                                                    </span>
-                                                </td>
-                                                <td className="py-4 px-4 text-slate-400">
-                                                    {s.completed_challenges || 0} acertos / {s.total_answers || s.total_challenges || 10}
-                                                </td>
-                                                <td className="py-4 px-4 text-center">
-                                                    <button
-                                                        onClick={() => handleOpenDiagnosis(s.id)}
-                                                        className="rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 px-4 py-2 text-xs font-bold text-white shadow transition"
-                                                    >
-                                                        🔍 Avaliar / Dossiê
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                )}
-
-                {/* ============================================================== */}
-                {/* MODAL / PAINEL: DOSSIÊ DIAGNÓSTICO INDIVIDUAL DO ALUNO         */}
-                {/* ============================================================== */}
-                {selectedStudentId && studentDiagnosis && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 overflow-y-auto backdrop-blur-sm">
-                        <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/20 bg-slate-900 p-6 sm:p-8 shadow-2xl space-y-6">
-                            
-                            {/* Topo do Dossiê */}
-                            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-white/10 pb-5">
-                                <div>
-                                    <span className="text-xs uppercase tracking-[0.2em] text-violet-400 font-bold">Dossiê de Avaliação Diagnóstica Individual</span>
-                                    <h3 className="text-2xl sm:text-3xl font-extrabold text-white mt-1">{studentDiagnosis.student.name}</h3>
-                                    <p className="text-xs sm:text-sm text-slate-400">{studentDiagnosis.student.email} • Nível {studentDiagnosis.student.level} • {studentDiagnosis.student.xp} XP</p>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <button
-                                        onClick={handlePrintDiagnosis}
-                                        className="rounded-xl bg-slate-800 hover:bg-slate-700 px-4 py-2 text-xs sm:text-sm font-semibold text-slate-200 transition"
-                                    >
-                                        🖨️ Imprimir Dossiê
-                                    </button>
-                                    <button
-                                        onClick={() => { setSelectedStudentId(null); setStudentDiagnosis(null); }}
-                                        className="rounded-xl bg-rose-600 hover:bg-rose-500 px-4 py-2 text-xs sm:text-sm font-bold text-white transition"
-                                    >
-                                        Fechar ✕
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Resumo Geral de Acertos */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                <div className="rounded-2xl bg-slate-950 p-4 border border-white/5">
-                                    <p className="text-xs text-slate-400">Total Respondidas</p>
-                                    <p className="text-2xl font-bold text-white mt-1">{studentDiagnosis.totalAnswers}</p>
-                                </div>
-                                <div className="rounded-2xl bg-slate-950 p-4 border border-white/5">
-                                    <p className="text-xs text-slate-400">Acertos</p>
-                                    <p className="text-2xl font-bold text-emerald-400 mt-1">{studentDiagnosis.totalCorrect}</p>
-                                </div>
-                                <div className="rounded-2xl bg-slate-950 p-4 border border-white/5">
-                                    <p className="text-xs text-slate-400">Erros Registrados</p>
-                                    <p className="text-2xl font-bold text-rose-400 mt-1">{studentDiagnosis.totalWrong}</p>
-                                </div>
-                                <div className="rounded-2xl bg-slate-950 p-4 border border-white/5">
-                                    <p className="text-xs text-slate-400">Taxa de Acerto Global</p>
-                                    <p className="text-2xl font-bold text-violet-400 mt-1">{studentDiagnosis.accuracyRate}%</p>
-                                </div>
-                            </div>
-
-                            {/* Parecer Pedagógico Automático */}
-                            <div className="rounded-2xl border border-violet-500/30 bg-violet-950/20 p-5">
-                                <p className="text-xs font-bold text-violet-300 uppercase tracking-wider mb-1">📋 Parecer Pedagógico Automatizado (Orientação ao Docente)</p>
-                                <p className="text-sm sm:text-base text-slate-200 leading-relaxed">{studentDiagnosis.pedagogicalSummary}</p>
-                            </div>
-
-                            {/* Proficiência do Aluno por Disciplina */}
-                            <div>
-                                <h4 className="text-lg font-bold text-white mb-3">Proficiência Individual por Disciplina</h4>
-                                <div className="grid gap-3 sm:grid-cols-2">
-                                    {studentDiagnosis.subjectProficiency.map((sub) => {
-                                        const isCrit = sub.status === 'critico';
-                                        const isAtt = sub.status === 'atencao';
-                                        const barColor = isCrit ? 'from-rose-600 to-red-500' : isAtt ? 'from-amber-600 to-yellow-500' : 'from-emerald-500 to-teal-500';
-                                        return (
-                                            <div key={sub.subject} className="rounded-xl bg-slate-950 p-3.5 border border-white/5">
-                                                <div className="flex justify-between text-xs font-semibold mb-1.5">
-                                                    <span className="text-white">{sub.subject}</span>
-                                                    <span className={isCrit ? 'text-rose-400' : isAtt ? 'text-amber-400' : 'text-emerald-400'}>
-                                                        {sub.accuracyRate}% ({sub.correct}/{sub.total})
-                                                    </span>
-                                                </div>
-                                                <div className="h-2.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                                                    <div className={`h-2.5 rounded-full bg-gradient-to-r ${barColor}`} style={{ width: `${Math.max(5, sub.accuracyRate)}%` }} />
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            {/* Detalhamento das Questões que o Aluno Errou */}
-                            <div>
-                                <div className="flex items-center justify-between mb-3">
-                                    <h4 className="text-lg font-bold text-white">Questões com Erros Registrados ({studentDiagnosis.recentErrors.length})</h4>
-                                    <span className="text-xs text-rose-400 font-semibold">Oportunidades de Reforço e Intervenção</span>
-                                </div>
-
-                                {studentDiagnosis.recentErrors.length === 0 ? (
-                                    <p className="rounded-xl bg-emerald-950/20 border border-emerald-500/20 p-4 text-sm text-emerald-300">
-                                        🎉 Excelente! O estudante não possui registros de erros recentes.
-                                    </p>
-                                ) : (
-                                    <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-                                        {studentDiagnosis.recentErrors.map((err, i) => (
-                                            <div key={i} className="rounded-2xl bg-slate-950/90 p-4 border border-rose-500/20 space-y-2">
-                                                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                                                    <span className="font-bold text-violet-300">{err.subject} • {err.topic || 'Conceito Curricular'}</span>
-                                                    <span className="text-slate-500">{new Date(err.answered_at).toLocaleDateString('pt-BR')}</span>
-                                                </div>
-                                                <p className="text-sm font-semibold text-white">{err.question}</p>
-                                                <div className="flex flex-wrap gap-4 text-xs pt-1 border-t border-white/5">
-                                                    <span className="text-rose-400 font-semibold">❌ Resposta Marcada pelo Aluno: {err.selected_answer}</span>
-                                                    <span className="text-emerald-400 font-semibold">✅ Alternativa Correta: {err.correct_answer}</span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                        </div>
-                    </div>
-                )}
-
+  return (
+    <div className="teacher-dashboard-page">
+      {/* 1. LEFT SIDEBAR (Faithful to MVP Image 2) */}
+      <aside className="teacher-nav-sidebar">
+        <div>
+          <div className="teacher-sidebar-brand">
+            <div className="brand-icon-box">
+              <svg width="22" height="22" viewBox="0 0 40 40" fill="none">
+                <path d="M12 8H24C28.4183 8 32 11.5817 32 16C32 20.4183 28.4183 24 24 24H18V32H12V8Z" fill="white" />
+                <path d="M18 14H24C25.1046 14 26 14.8954 26 16C26 17.1046 25.1046 18 24 18H18V14Z" fill="#0284c7" />
+              </svg>
             </div>
+            <div className="brand-name-title">Progress<span>Ed</span></div>
+          </div>
+
+          <nav className="teacher-sidebar-menu">
+            <button
+              className={`teacher-menu-link ${activeMenu === 'painel' ? 'active' : ''}`}
+              onClick={() => setActiveMenu('painel')}
+            >
+              <span>📊</span>
+              <span>Painel</span>
+            </button>
+            <button
+              className={`teacher-menu-link ${activeMenu === 'alunos' ? 'active' : ''}`}
+              onClick={() => setActiveMenu('alunos')}
+            >
+              <span>👥</span>
+              <span>Alunos</span>
+            </button>
+            <button className="teacher-menu-link" onClick={() => alert('Turmas: 3º Ano Médio Regular')}>
+              <span>🏫</span>
+              <span>Turmas</span>
+            </button>
+            <button className="teacher-menu-link" onClick={() => alert('Módulo de Tarefas Curriculares')}>
+              <span>☑️</span>
+              <span>Tarefas</span>
+            </button>
+            <button className="teacher-menu-link" onClick={() => alert('Módulo de Avaliações')}>
+              <span>📝</span>
+              <span>Avaliações</span>
+            </button>
+            <button className="teacher-menu-link" onClick={() => alert('Relatórios Gerenciais')}>
+              <span>📈</span>
+              <span>Relatórios</span>
+            </button>
+            <button className="teacher-menu-link" onClick={() => alert('Análises Preditivas')}>
+              <span>💡</span>
+              <span>Análises</span>
+            </button>
+            <button className="teacher-menu-link" onClick={() => alert('Mensagens')}>
+              <span>✉️</span>
+              <span>Mensagens</span>
+              <span className="menu-badge-pill">3</span>
+            </button>
+            <button className="teacher-menu-link" onClick={() => alert('Metas Pedagógicas')}>
+              <span>🎯</span>
+              <span>Metas</span>
+            </button>
+            <button className="teacher-menu-link" onClick={() => alert('Recursos Didáticos')}>
+              <span>📚</span>
+              <span>Recursos</span>
+            </button>
+            <button className="teacher-menu-link" onClick={() => alert('Configurações da Escola')}>
+              <span>⚙️</span>
+              <span>Configurações</span>
+            </button>
+          </nav>
         </div>
-    );
+
+        {/* Profile Card Bottom */}
+        <div className="teacher-profile-footer">
+          <div className="teacher-user-card" onClick={onLogout} title="Clique para sair">
+            <div className="teacher-avatar-circle">
+              P
+            </div>
+            <div className="teacher-user-meta">
+              <h6>Prof. Pedro Brandão</h6>
+              <p>Centro Educa Mais Paulo Freire</p>
+            </div>
+            <span className="text-slate-500 text-xs">🚪</span>
+          </div>
+        </div>
+      </aside>
+
+      {/* 2. MAIN VIEWPORT */}
+      <main className="teacher-main-viewport">
+        {/* Top Action Bar */}
+        <header className="teacher-top-action-bar">
+          <div className="teacher-header-titles">
+            <h1>Painel</h1>
+            <p>Visão geral do engajamento e progresso da turma</p>
+          </div>
+
+          <div className="teacher-header-controls">
+            <select
+              className="select-custom-dropdown"
+              value={selectedClass}
+              onChange={(e) => setSelectedClass(e.target.value)}
+            >
+              <option value="3em">3º Ano Médio - Regular</option>
+              <option value="8ci">8º Ano Ciências</option>
+            </select>
+
+            <div className="date-range-badge-pill">
+              <span>📅</span>
+              <span>12 de mai – 16 de mai, 2026</span>
+            </div>
+
+            <button className="btn-export-report" onClick={() => window.print()}>
+              <span>📥</span>
+              <span>Exportar Relatório</span>
+            </button>
+          </div>
+        </header>
+
+        {/* ROW 1: 4 KPI CARDS (Faithful to MVP Image 2) */}
+        <section className="kpi-cards-grid-4">
+          {/* Card 1: Engajamento Geral */}
+          <div className="kpi-stat-card">
+            <div className="kpi-top-row">
+              <div className="kpi-icon-circle blue">👥</div>
+              <p className="kpi-label-text">Engajamento Geral</p>
+            </div>
+            <div className="kpi-bottom-row">
+              <div>
+                <h3 className="kpi-number-display">76%</h3>
+                <span className="kpi-trend-info up">↑ 8% vs últimos 7 dias</span>
+              </div>
+              <svg className="kpi-sparkline-svg" viewBox="0 0 90 32">
+                <path d="M0,28 Q20,10 45,22 T90,5" stroke="#38bdf8" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Card 2: Tarefas Concluídas */}
+          <div className="kpi-stat-card">
+            <div className="kpi-top-row">
+              <div className="kpi-icon-circle green">✓</div>
+              <p className="kpi-label-text">Tarefas Concluídas</p>
+            </div>
+            <div className="kpi-bottom-row">
+              <div>
+                <h3 className="kpi-number-display">82%</h3>
+                <span className="kpi-trend-info up">↑ 6% vs últimos 7 dias</span>
+              </div>
+              <svg className="kpi-sparkline-svg" viewBox="0 0 90 32">
+                <path d="M0,25 Q30,5 60,18 T90,8" stroke="#34d399" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Card 3: Tempo em Tarefa */}
+          <div className="kpi-stat-card">
+            <div className="kpi-top-row">
+              <div className="kpi-icon-circle purple">⏱️</div>
+              <p className="kpi-label-text">Tempo em Tarefa (Média)</p>
+            </div>
+            <div className="kpi-bottom-row">
+              <div>
+                <h3 className="kpi-number-display">48m</h3>
+                <span className="kpi-trend-info up">↑ 5m vs últimos 7 dias</span>
+              </div>
+              <svg className="kpi-sparkline-svg" viewBox="0 0 90 32">
+                <path d="M0,20 Q25,28 50,10 T90,12" stroke="#c084fc" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Card 4: Alunos Precisando de Ajuda */}
+          <div className="kpi-stat-card">
+            <div className="kpi-top-row">
+              <div className="kpi-icon-circle amber">⚠️</div>
+              <p className="kpi-label-text">Alunos Precisando de Ajuda</p>
+            </div>
+            <div className="kpi-bottom-row">
+              <div>
+                <h3 className="kpi-number-display">6</h3>
+                <span className="kpi-trend-info down">↓ 2 vs últimos 7 dias</span>
+              </div>
+              <svg className="kpi-sparkline-svg" viewBox="0 0 90 32">
+                <path d="M0,8 Q30,25 60,12 T90,26" stroke="#fbbf24" />
+              </svg>
+            </div>
+          </div>
+        </section>
+
+        {/* ROW 2: 3 CARDS (Line Chart, Bar Chart by Topic, Students List) */}
+        <section className="teacher-row-2-grid">
+          {/* Card 1: Engajamento ao Longo do Tempo */}
+          <div className="teacher-card-panel">
+            <div className="card-panel-header">
+              <h4>
+                <span>Engajamento ao Longo do Tempo</span>
+                <span className="info-tooltip-icon">ⓘ</span>
+              </h4>
+              <select className="bg-slate-900 text-xs text-slate-300 rounded-lg px-2 py-1 border border-white/10 outline-none">
+                <option>30 Dias</option>
+                <option>7 Dias</option>
+              </select>
+            </div>
+
+            {/* Line Chart SVG */}
+            <div className="relative h-[200px] w-full flex items-center justify-center">
+              <svg className="w-full h-full" viewBox="0 0 360 160">
+                <line x1="40" y1="20" x2="350" y2="20" stroke="rgba(255,255,255,0.05)" strokeDasharray="3" />
+                <line x1="40" y1="60" x2="350" y2="60" stroke="rgba(255,255,255,0.05)" strokeDasharray="3" />
+                <line x1="40" y1="100" x2="350" y2="100" stroke="rgba(255,255,255,0.05)" strokeDasharray="3" />
+                <line x1="40" y1="140" x2="350" y2="140" stroke="rgba(255,255,255,0.05)" strokeDasharray="3" />
+
+                <text x="10" y="24" fill="#64748b" fontSize="10">100%</text>
+                <text x="10" y="64" fill="#64748b" fontSize="10">75%</text>
+                <text x="10" y="104" fill="#64748b" fontSize="10">50%</text>
+                <text x="10" y="144" fill="#64748b" fontSize="10">0%</text>
+
+                {/* Line Path */}
+                <path
+                  d="M50,100 Q100,70 150,60 T250,55 T340,50"
+                  fill="none"
+                  stroke="#38bdf8"
+                  strokeWidth="3"
+                />
+
+                {/* Dots on line */}
+                <circle cx="50" cy="100" r="4" fill="#38bdf8" />
+                <circle cx="110" cy="74" r="4" fill="#38bdf8" />
+                <circle cx="170" cy="62" r="4" fill="#38bdf8" />
+                <circle cx="230" cy="57" r="4" fill="#38bdf8" />
+                <circle cx="290" cy="53" r="4" fill="#38bdf8" />
+                <circle cx="340" cy="50" r="4" fill="#38bdf8" />
+
+                {/* Bottom Date labels */}
+                <text x="40" y="155" fill="#64748b" fontSize="9">Abr 21</text>
+                <text x="100" y="155" fill="#64748b" fontSize="9">28 abr</text>
+                <text x="160" y="155" fill="#64748b" fontSize="9">5 mai</text>
+                <text x="220" y="155" fill="#64748b" fontSize="9">12 mai</text>
+                <text x="280" y="155" fill="#64748b" fontSize="9">19 mai</text>
+              </svg>
+            </div>
+            <div className="flex items-center justify-center gap-2 mt-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-sky-400" />
+              <span className="text-xs text-slate-400">Pontuação de Engajamento</span>
+            </div>
+          </div>
+
+          {/* Card 2: Conclusão de Tarefas por Tópico */}
+          <div className="teacher-card-panel">
+            <div className="card-panel-header">
+              <h4>
+                <span>Conclusão de Tarefas por Tópico</span>
+                <span className="info-tooltip-icon">ⓘ</span>
+              </h4>
+              <span className="text-xs text-sky-400 font-semibold cursor-pointer">Ver Todos</span>
+            </div>
+
+            <div className="topic-bars-container">
+              <div className="topic-bar-column">
+                <span className="topic-bar-percentage">90%</span>
+                <div className="topic-bar-fill-body blue" style={{ height: '90%' }} />
+                <span className="topic-bar-label">Células & Vida</span>
+              </div>
+              <div className="topic-bar-column">
+                <span className="topic-bar-percentage">76%</span>
+                <div className="topic-bar-fill-body green" style={{ height: '76%' }} />
+                <span className="topic-bar-label">Ecossistemas</span>
+              </div>
+              <div className="topic-bar-column">
+                <span className="topic-bar-percentage">65%</span>
+                <div className="topic-bar-fill-body amber" style={{ height: '65%' }} />
+                <span className="topic-bar-label">Energia</span>
+              </div>
+              <div className="topic-bar-column">
+                <span className="topic-bar-percentage">86%</span>
+                <div className="topic-bar-fill-body purple" style={{ height: '86%' }} />
+                <span className="topic-bar-label">Forças & Mov.</span>
+              </div>
+              <div className="topic-bar-column">
+                <span className="topic-bar-percentage">72%</span>
+                <div className="topic-bar-fill-body cyan" style={{ height: '72%' }} />
+                <span className="topic-bar-label">Ciências Terra</span>
+              </div>
+              <div className="topic-bar-column">
+                <span className="topic-bar-percentage">85%</span>
+                <div className="topic-bar-fill-body blue" style={{ height: '85%' }} />
+                <span className="topic-bar-label">Método Cient.</span>
+              </div>
+            </div>
+            <p className="text-[11px] text-center text-slate-500 mt-2">% de Alunos que Completaram</p>
+          </div>
+
+          {/* Card 3: Alunos (Search + List + Click for Dossier) */}
+          <div className="teacher-card-panel">
+            <div className="card-panel-header">
+              <h4>Alunos</h4>
+              <select
+                className="bg-slate-900 text-xs text-slate-300 rounded-lg px-2 py-1 border border-white/10 outline-none"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="all">Todos os Status</option>
+                <option value="active">Ativo</option>
+                <option value="needs-help">Precisa de Ajuda</option>
+                <option value="completed">Concluído</option>
+              </select>
+            </div>
+
+            <div className="student-search-input-box">
+              <span className="student-search-icon">🔍</span>
+              <input
+                type="text"
+                placeholder="Buscar alunos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <div className="teacher-student-items-scroll">
+              {filteredStudents.map((st) => (
+                <div
+                  key={st.id}
+                  className="teacher-student-row"
+                  onClick={() => handleOpenStudentDossier(st)}
+                  title="Clique para abrir o Dossiê Individual"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className={`student-avatar-badge ${st.color}`}>
+                      {st.name[0]}
+                    </div>
+                    <span className="student-name-text">{st.name}</span>
+                  </div>
+
+                  <span className="student-completion-val">{st.completion}%</span>
+
+                  <span className={`student-status-tag ${st.status}`}>
+                    {st.status === 'active' ? 'Ativo' : st.status === 'needs-help' ? 'Precisa de Ajuda' : 'Concluído'}
+                  </span>
+
+                  <span className="text-slate-400 text-xs hover:text-white">⋮</span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => alert('Visualizando todos os alunos matriculados')}
+              className="mt-3 text-xs text-sky-400 font-semibold hover:underline text-left"
+            >
+              Ver Todos os Alunos &gt;
+            </button>
+          </div>
+        </section>
+
+        {/* ROW 3: 3 CARDS (Donut Activity, Heatmap, Insights) */}
+        <section className="teacher-row-3-grid">
+          {/* Card 1: Engajamento por Tipo de Atividade */}
+          <div className="teacher-card-panel">
+            <div className="card-panel-header">
+              <h4>
+                <span>Engajamento por Tipo</span>
+                <span className="info-tooltip-icon">ⓘ</span>
+              </h4>
+            </div>
+
+            <div className="donut-chart-layout">
+              <div className="donut-svg-wrapper">
+                <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#1e293b" strokeWidth="3.8" />
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#3b82f6" strokeWidth="3.8" strokeDasharray="40, 100" />
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#10b981" strokeWidth="3.8" strokeDasharray="25, 100" strokeDashoffset="-40" />
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#f59e0b" strokeWidth="3.8" strokeDasharray="15, 100" strokeDashoffset="-65" />
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#8b5cf6" strokeWidth="3.8" strokeDasharray="10, 100" strokeDashoffset="-80" />
+                </svg>
+                <div className="donut-center-metric">
+                  <h5>76%</h5>
+                  <p>Geral</p>
+                </div>
+              </div>
+
+              <div className="donut-legend-list">
+                <div className="donut-legend-item">
+                  <span className="donut-dot bg-blue-500" />
+                  <span>Tarefas: 40%</span>
+                </div>
+                <div className="donut-legend-item">
+                  <span className="donut-dot bg-emerald-500" />
+                  <span>Avaliações: 25%</span>
+                </div>
+                <div className="donut-legend-item">
+                  <span className="donut-dot bg-amber-500" />
+                  <span>Discussões: 15%</span>
+                </div>
+                <div className="donut-legend-item">
+                  <span className="donut-dot bg-purple-500" />
+                  <span>Vídeos: 10%</span>
+                </div>
+              </div>
+            </div>
+            <a href="#relatorio" onClick={(e) => { e.preventDefault(); alert('Relatório analítico de atividades'); }} className="text-xs text-sky-400 font-semibold hover:underline mt-2">
+              Ver Relatório Completo &gt;
+            </a>
+          </div>
+
+          {/* Card 2: Mapa de Calor de Engajamento */}
+          <div className="teacher-card-panel">
+            <div className="card-panel-header">
+              <h4>
+                <span>Mapa de Calor de Engajamento (Últimos 7 Dias)</span>
+                <span className="info-tooltip-icon">ⓘ</span>
+              </h4>
+            </div>
+
+            <div className="heatmap-table-grid">
+              <div className="heatmap-days-header-row">
+                <span />
+                <span>Seg</span>
+                <span>Ter</span>
+                <span>Qua</span>
+                <span>Qui</span>
+                <span>Sex</span>
+                <span>Sáb</span>
+                <span>Dom</span>
+              </div>
+
+              {[
+                { hour: '18h', cells: ['lvl-1', 'lvl-2', 'lvl-3', 'lvl-2', 'lvl-3', 'lvl-4', 'lvl-2'] },
+                { hour: '16h', cells: ['lvl-2', 'lvl-3', 'lvl-3', 'lvl-4', 'lvl-4', 'lvl-3', 'lvl-1'] },
+                { hour: '14h', cells: ['lvl-1', 'lvl-2', 'lvl-4', 'lvl-3', 'lvl-3', 'lvl-2', 'lvl-1'] },
+                { hour: '10h', cells: ['lvl-2', 'lvl-3', 'lvl-2', 'lvl-3', 'lvl-2', 'lvl-1', 'lvl-1'] },
+                { hour: '8h', cells: ['lvl-1', 'lvl-2', 'lvl-2', 'lvl-1', 'lvl-2', 'lvl-1', 'lvl-1'] },
+              ].map((row, rIdx) => (
+                <div key={rIdx} className="heatmap-hour-row">
+                  <span className="hour-label">{row.hour}</span>
+                  {row.cells.map((lvl, cIdx) => (
+                    <div key={cIdx} className={`heatmap-cell ${lvl}`} />
+                  ))}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 px-2">
+              <span>Menos Engajamento</span>
+              <div className="flex gap-1">
+                <span className="w-3 h-3 rounded bg-sky-950" />
+                <span className="w-3 h-3 rounded bg-sky-800" />
+                <span className="w-3 h-3 rounded bg-sky-600" />
+                <span className="w-3 h-3 rounded bg-sky-400" />
+              </div>
+              <span>Mais Engajamento</span>
+            </div>
+          </div>
+
+          {/* Card 3: Insights & Análises */}
+          <div className="teacher-card-panel">
+            <div className="card-panel-header">
+              <h4>
+                <span>Análises</span>
+                <span className="info-tooltip-icon">ⓘ</span>
+              </h4>
+            </div>
+
+            <div className="insights-items-list">
+              <div className="insight-card-item">
+                <div className="insight-icon-box green">📈</div>
+                <div className="insight-text-details">
+                  <h6>Engajamento em Melhora</h6>
+                  <p>O engajamento geral aumentou 8% em comparação com a semana passada. Ótimo ritmo!</p>
+                </div>
+              </div>
+
+              <div className="insight-card-item">
+                <div className="insight-icon-box amber">⚠️</div>
+                <div className="insight-text-details">
+                  <h6>6 Alunos Precisam de Atenção</h6>
+                  <p>Considere entrar em contato com os alunos que podem estar com dificuldades em Física e Matemática.</p>
+                </div>
+              </div>
+
+              <div className="insight-card-item">
+                <div className="insight-icon-box purple">💡</div>
+                <div className="insight-text-details">
+                  <h6>Conteúdos Mais Populares</h6>
+                  <p>As trilhas de Ciências da Natureza tiveram o maior índice de engajamento esta semana.</p>
+                </div>
+              </div>
+            </div>
+
+            <a href="#analises" onClick={(e) => { e.preventDefault(); alert('Visualizando diagnósticos preditivos da turma'); }} className="text-xs text-sky-400 font-semibold hover:underline mt-3">
+              Ver Todas as Análises &gt;
+            </a>
+          </div>
+        </section>
+
+        {/* Footer Info */}
+        <div className="teacher-dashboard-footer-info">
+          <span>ⓘ</span>
+          <span>Todos os dados são atualizados diariamente. Última atualização: 16 de mai de 2026 às 22:30 • Centro Educa Mais Paulo Freire</span>
+        </div>
+
+        {/* ================================================================ */}
+        {/* DOSSIÊ INDIVIDUAL DO ALUNO (MODAL COMPLETO)                      */}
+        {/* ================================================================ */}
+        {selectedStudent && (
+          <div className="dossier-modal-overlay" onClick={() => setSelectedStudent(null)}>
+            <div className="dossier-modal-card" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-sky-500/20 text-sky-400 font-extrabold text-xl flex items-center justify-center border border-sky-500/30">
+                    {selectedStudent.name[0]}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white leading-tight">{selectedStudent.name}</h3>
+                    <p className="text-xs text-slate-400">Dossiê Pedagógico Individual • Centro Educa Mais Paulo Freire</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => window.print()}
+                    className="px-3 py-1.5 rounded-xl bg-slate-800 text-xs font-semibold text-slate-300 hover:text-white"
+                  >
+                    🖨️ Imprimir
+                  </button>
+                  <button
+                    onClick={() => setSelectedStudent(null)}
+                    className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              {loadingDiagnosis ? (
+                <div className="py-12 text-center text-slate-400">
+                  <span className="text-2xl animate-spin inline-block">⏳</span>
+                  <p className="mt-2 text-sm">Carregando métricas e histórico de erros do estudante...</p>
+                </div>
+              ) : studentDiagnosis ? (
+                <div className="space-y-6 pt-5">
+                  {/* Resumo Diagnóstico */}
+                  <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-sm leading-relaxed">
+                    {studentDiagnosis.pedagogicalSummary}
+                  </div>
+
+                  {/* KPIs do Aluno */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="p-3.5 rounded-xl bg-slate-900 border border-white/5 text-center">
+                      <p className="text-xs text-slate-400 uppercase font-semibold">Taxa de Acertos</p>
+                      <p className="text-2xl font-extrabold text-emerald-400 mt-1">{studentDiagnosis.accuracyRate}%</p>
+                    </div>
+                    <div className="p-3.5 rounded-xl bg-slate-900 border border-white/5 text-center">
+                      <p className="text-xs text-slate-400 uppercase font-semibold">Acertos</p>
+                      <p className="text-2xl font-extrabold text-sky-400 mt-1">{studentDiagnosis.totalCorrect}</p>
+                    </div>
+                    <div className="p-3.5 rounded-xl bg-slate-900 border border-white/5 text-center">
+                      <p className="text-xs text-slate-400 uppercase font-semibold">Erros Registrados</p>
+                      <p className="text-2xl font-extrabold text-rose-400 mt-1">{studentDiagnosis.totalWrong}</p>
+                    </div>
+                  </div>
+
+                  {/* Histórico Recente de Erros */}
+                  <div>
+                    <h4 className="text-sm font-bold uppercase tracking-wider text-slate-300 mb-3">
+                      Questões com Erro & Alternativas Assinaladas
+                    </h4>
+                    <div className="space-y-2.5">
+                      {studentDiagnosis.recentErrors?.map((err, i) => (
+                        <div key={i} className="p-3.5 rounded-xl bg-slate-900/90 border border-white/5 text-xs">
+                          <div className="flex items-center justify-between text-slate-400 mb-1">
+                            <span className="font-semibold text-sky-400">{err.subject} • {err.topic}</span>
+                            <span>{new Date(err.answered_at).toLocaleDateString('pt-BR')}</span>
+                          </div>
+                          <p className="font-medium text-slate-200 mb-2">{err.question}</p>
+                          <div className="flex gap-4">
+                            <span className="text-rose-400 font-semibold">Marcou: {err.selected_answer}</span>
+                            <span className="text-emerald-400 font-semibold">Correta: {err.correct_answer}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
 }
 
 export default TeacherDashboard;

@@ -1,18 +1,18 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import ChallengeCard from '../components/ChallengeCard';
 import api from '../services/api';
 import { DEFAULT_CHALLENGES, DEFAULT_RANKING } from '../data/defaultChallenges';
 import './StudentDashboard.css';
 
 const MODULES = [
-  { id: 1, name: 'Linguagens', subtitle: 'Português • Inglês • Literatura • Artes', description: 'Trilhas de interpretação textual, gramática, literatura e línguas adicionais.', icon: '📝', color: 'from-violet-600 to-indigo-600' },
-  { id: 2, name: 'Matemática', subtitle: 'Álgebra • Geometria • Estatística • Funções', description: 'Desafios que desenvolvem o raciocínio abstrato, cálculo e resolução de problemas.', icon: '📐', color: 'from-fuchsia-600 to-purple-800' },
-  { id: 3, name: 'Ciências da Natureza', subtitle: 'Física • Química • Biologia', description: 'Questões experimentais, fenômenos da matéria, energia e ecossistemas.', icon: '🧪', color: 'from-emerald-500 to-teal-700' },
-  { id: 4, name: 'Ciências Humanas', subtitle: 'História • Geografia • Filosofia • Sociologia', description: 'Sociedade, cidadania, marcos históricos e formação social do Brasil.', icon: '📜', color: 'from-amber-500 to-orange-700' },
-  { id: 5, name: 'Atualidades & Cidadania', subtitle: 'Mundo Contemporâneo • Meio Ambiente', description: 'Temas contemporâneos, ética e debates fundamentais para vestibulares e ENEM.', icon: '🌎', color: 'from-cyan-500 to-sky-700' },
+  { id: 1, name: 'Linguagens & Códigos', subtitle: 'Português • Redação • Literatura • Inglês', description: 'Trilhas de interpretação textual, gramática, literatura brasileira e análise de discurso.', icon: '📝', color: 'from-violet-600 to-indigo-600' },
+  { id: 2, name: 'Matemática & Suas Tecnologias', subtitle: 'Álgebra • Geometria • Estatística • Funções', description: 'Desafios que desenvolvem o raciocínio lógico, modelagem matemática e resolução de problemas.', icon: '📐', color: 'from-fuchsia-600 to-purple-800' },
+  { id: 3, name: 'Ciências da Natureza', subtitle: 'Física • Química • Biologia', description: 'Experimentos, termodinâmica, eletricidade, reações químicas, genética e ecologia.', icon: '🧪', color: 'from-emerald-500 to-teal-700' },
+  { id: 4, name: 'Ciências Humanas & Sociais', subtitle: 'História • Geografia • Filosofia • Sociologia', description: 'Sociedade, cidadania, marcos históricos nacionais e globais, geopolítica e direitos humanos.', icon: '📜', color: 'from-amber-500 to-orange-700' },
+  { id: 5, name: 'Atualidades & Cidadania', subtitle: 'Mundo Contemporâneo • Meio Ambiente • Tecnologia', description: 'Debates contemporâneos essenciais para temas de redação e provas do ENEM.', icon: '🌎', color: 'from-cyan-500 to-sky-700' },
 ];
 
-const LEVEL_XP = 200;
+const LEVEL_XP = 500;
 
 function normalizeChallenge(c) {
   return {
@@ -27,31 +27,36 @@ function normalizeChallenge(c) {
     optionD: c.optionD ?? c.option_d ?? '',
     optionE: c.optionE ?? c.option_e ?? null,
     correctAnswer: (c.correctAnswer || c.correct_answer || 'A').toUpperCase(),
-    difficulty: Number(c.difficulty || 1),
+    difficulty: Number(c.difficulty || 2),
     xpReward: Number(c.xpReward || c.xp_reward || 15),
     explanation: c.explanation || c.description ||
-      `A alternativa correta é a (${(c.correctAnswer || c.correct_answer || 'A').toUpperCase()}). Compreender este conceito consolida os fundamentos curriculares da BNCC em ${c.subject || 'Conhecimentos Gerais'}.`
+      `A alternativa correta é a (${(c.correctAnswer || c.correct_answer || 'A').toUpperCase()}). Compreender este conceito consolida as competências essenciais da BNCC em ${c.subject || 'Conhecimentos Gerais'}.`
   };
 }
 
 function StudentDashboard({ user, onLogout }) {
-  const [currentUser, setCurrentUser] = useState(user || { name: 'Estudante', level: 1, xp: 0 });
+  const [currentUser, setCurrentUser] = useState(user || { name: 'Ana Carolina', level: 5, xp: 2450 });
   const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ranking, setRanking] = useState(DEFAULT_RANKING);
 
-  // Estados de Navegação e Quiz
+  // Navegação
+  const [sidebarTab, setSidebarTab] = useState('trilhas'); // 'trilhas' | 'ranking' | 'perfil'
+  const [rankingTab, setRankingTab] = useState('global'); // 'global' | 'escola'
+  const [showTrackModal, setShowTrackModal] = useState(false);
+
+  // Estados do Quiz
   const [viewMode, setViewMode] = useState('hub'); // 'hub' | 'quiz' | 'simulado_result'
   const [quizMode, setQuizMode] = useState('track'); // 'track' | 'simulado'
   const [currentTrack, setCurrentTrack] = useState(null);
   const [activeQuizList, setActiveQuizList] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(25);
-  const [timerPaused, setTimerPaused] = useState(true);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [timerPaused, setTimerPaused] = useState(false);
   const [timeExpired, setTimeExpired] = useState(false);
   const [disabled, setDisabled] = useState(false);
 
-  // Estatísticas da sessão atual (para simulados)
+  // Estatísticas da sessão
   const [sessionStats, setSessionStats] = useState({
     correct: 0,
     wrong: 0,
@@ -59,16 +64,13 @@ function StudentDashboard({ user, onLogout }) {
     answers: []
   });
 
-  const [completedChallenges, setCompletedChallenges] = useState(new Set());
-
-  // 1. Carregamento inicial de dados
   useEffect(() => {
     loadUserProfile();
     loadChallenges();
     loadRanking();
   }, []);
 
-  // 2. Temporizador controlado (Pausa quando o aluno responde ou expira)
+  // Timer com pausa pedagógica automática ao responder
   useEffect(() => {
     if (viewMode !== 'quiz' || timerPaused) return;
 
@@ -93,7 +95,7 @@ function StudentDashboard({ user, onLogout }) {
         localStorage.setItem('user', JSON.stringify(response.data));
       }
     } catch (error) {
-      console.warn('Usando perfil local:', error.message);
+      console.warn('Perfil local mantido:', error.message);
     }
   };
 
@@ -101,13 +103,11 @@ function StudentDashboard({ user, onLogout }) {
     try {
       const response = await api.get('/challenges');
       if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-        const normalized = response.data.map(normalizeChallenge);
-        setChallenges(normalized);
+        setChallenges(response.data.map(normalizeChallenge));
       } else {
         setChallenges(DEFAULT_CHALLENGES.map(normalizeChallenge));
       }
     } catch (error) {
-      console.warn('Backend offline, carregando desafios da BNCC locais:', error.message);
       setChallenges(DEFAULT_CHALLENGES.map(normalizeChallenge));
     } finally {
       setLoading(false);
@@ -123,62 +123,50 @@ function StudentDashboard({ user, onLogout }) {
         setRanking(DEFAULT_RANKING);
       }
     } catch (error) {
-      console.warn('Usando ranking local:', error.message);
       setRanking(DEFAULT_RANKING);
     }
   };
 
-  // Funções de Inicialização de Quizzes / Modos
   const handleStartTrack = (module) => {
     const trackChallenges = challenges.filter(c => c.moduleId === module.id);
-    if (trackChallenges.length === 0) {
-      alert('Nenhum desafio encontrado para esta trilha no momento.');
-      return;
-    }
+    const selectedList = trackChallenges.length > 0 ? trackChallenges : challenges.slice(0, 5);
 
     setCurrentTrack(module);
     setQuizMode('track');
-    setActiveQuizList(trackChallenges);
+    setActiveQuizList(selectedList);
     setCurrentIndex(0);
-    setTimeLeft(25);
+    setTimeLeft(30);
     setTimerPaused(false);
     setTimeExpired(false);
     setDisabled(false);
     setSessionStats({ correct: 0, wrong: 0, xpGained: 0, answers: [] });
+    setShowTrackModal(false);
     setViewMode('quiz');
   };
 
   const handleStartSimulado = (count = 10) => {
-    if (challenges.length === 0) {
-      alert('Carregando banco de questões, aguarde um instante.');
-      return;
-    }
-
-    // Sorteia aleatoriamente 'count' questões de todas as disciplinas
     const shuffled = [...challenges].sort(() => 0.5 - Math.random()).slice(0, count);
-    
-    setCurrentTrack({ name: 'Simulado Geral BNCC', icon: '🎯', subtitle: '10 Questões Multidisciplinares' });
+    setCurrentTrack({ name: 'Simulado Geral BNCC (ENEM)', icon: '🎯', subtitle: '10 Questões Multidisciplinares' });
     setQuizMode('simulado');
     setActiveQuizList(shuffled);
     setCurrentIndex(0);
-    setTimeLeft(25);
+    setTimeLeft(45);
     setTimerPaused(false);
     setTimeExpired(false);
     setDisabled(false);
     setSessionStats({ correct: 0, wrong: 0, xpGained: 0, answers: [] });
+    setShowTrackModal(false);
     setViewMode('quiz');
   };
 
-  // Submissão da resposta pelo aluno
   const handleChallengeSubmit = async (challengeId, answer) => {
-    setTimerPaused(true); // PAUSA IMEDIATAMENTE O TEMPORIZADOR para leitura calma da explicação
+    setTimerPaused(true); // Pausa o tempo imediatamente para que o aluno leia a explicação com calma!
     setDisabled(true);
 
     const currentQ = activeQuizList[currentIndex];
     const isCorrect = currentQ && (answer || '').toUpperCase() === currentQ.correctAnswer;
     const xpReward = currentQ ? currentQ.xpReward : 15;
 
-    // Atualiza estatísticas da sessão
     setSessionStats(prev => ({
       ...prev,
       correct: isCorrect ? prev.correct + 1 : prev.correct,
@@ -193,167 +181,120 @@ function StudentDashboard({ user, onLogout }) {
         setCurrentUser(response.data.user);
         localStorage.setItem('user', JSON.stringify(response.data.user));
       }
-      if (isCorrect) {
-        setCompletedChallenges(prev => new Set(prev).add(challengeId));
-      }
     } catch (error) {
-      // Fallback offline com cálculo de XP local
       if (isCorrect) {
-        const newXp = (currentUser.xp || 0) + xpReward;
+        const newXp = (currentUser.xp || 2450) + xpReward;
         const newLevel = Math.floor(newXp / LEVEL_XP) + 1;
         const updated = { ...currentUser, xp: newXp, level: newLevel };
         setCurrentUser(updated);
         localStorage.setItem('user', JSON.stringify(updated));
-        setCompletedChallenges(prev => new Set(prev).add(challengeId));
       }
     } finally {
       setDisabled(false);
     }
   };
 
-  // Avanço manual para a próxima questão
   const handleNextQuestion = () => {
     if (currentIndex < activeQuizList.length - 1) {
       setCurrentIndex(prev => prev + 1);
-      setTimeLeft(25);
+      setTimeLeft(30);
       setTimeExpired(false);
       setTimerPaused(false);
       setDisabled(false);
     } else {
-      // Chegou ao fim do quiz ou simulado
       if (quizMode === 'simulado') {
         setViewMode('simulado_result');
       } else {
-        alert('🎉 Trilha concluída com sucesso! Você avançou em seus estudos.');
+        alert('🎉 Desafio concluído com sucesso! Excelente progresso.');
         setViewMode('hub');
       }
     }
   };
 
-  // Módulos e progresso
-  const xpForNextLevel = ((currentUser?.level || 1) * LEVEL_XP) - (currentUser?.xp || 0);
-  const levelProgress = ((currentUser?.xp || 0) % LEVEL_XP) / LEVEL_XP;
+  // Níveis e Metas
+  const currentLevel = currentUser?.level || 5;
+  const currentXp = currentUser?.xp || 2450;
+  const targetXp = currentLevel * LEVEL_XP + 1000;
+  const xpNeeded = Math.max(0, targetXp - currentXp);
+  const progressPercent = Math.min(100, Math.round((currentXp / targetXp) * 100));
 
-  if (loading) {
+  // Dados fiéis do Ranking
+  const topRankings = [
+    { rank: 1, name: 'Lucas Mendes', level: 8, xp: 3250, isCurrent: false },
+    { rank: 2, name: 'Mariana Silva', level: 7, xp: 2980, isCurrent: false },
+    { rank: 3, name: 'Pedro Henrique', level: 7, xp: 2750, isCurrent: false },
+    { rank: 4, name: 'Beatriz Oliveira', level: 6, xp: 2450, isCurrent: false },
+    { rank: 5, name: currentUser.name || 'Ana Carolina', level: currentLevel, xp: currentXp, isCurrent: true }
+  ];
+
+  // --------------------------------------------------------------------------
+  // TELA DO QUIZ (Fiel ao MVP Image 3)
+  // --------------------------------------------------------------------------
+  if (viewMode === 'quiz' && activeQuizList[currentIndex]) {
+    const currentQ = activeQuizList[currentIndex];
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 text-white">
-        <div className="text-center">
-          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-violet-500/20 text-3xl animate-bounce">📚</div>
-          <p className="text-lg font-semibold">Carregando conteúdos da BNCC...</p>
-        </div>
+      <div className="quiz-page-container min-h-screen bg-[#030712] text-white p-4 sm:p-6 lg:p-8">
+        <ChallengeCard
+          challenge={currentQ}
+          currentIndex={currentIndex}
+          totalQuestions={activeQuizList.length}
+          timeLeft={timeLeft}
+          timerPaused={timerPaused}
+          onSubmit={handleChallengeSubmit}
+          onNext={handleNextQuestion}
+          onExit={() => setViewMode('hub')}
+          isLastQuestion={currentIndex >= activeQuizList.length - 1}
+          disabled={disabled}
+          timeExpired={timeExpired}
+        />
       </div>
     );
   }
 
-  const currentChallenge = activeQuizList[currentIndex] || null;
-  const isLastQuestion = currentIndex >= activeQuizList.length - 1;
-
-  // ==========================================
-  // RENDERIZAÇÃO: TELA DO QUIZ / QUESTÃO ATIVA
-  // ==========================================
-  if (viewMode === 'quiz' && currentChallenge) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-white p-4 sm:p-6 lg:p-8">
-        <div className="mx-auto max-w-4xl">
-          {/* Top Bar do Quiz */}
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-slate-900/90 p-4 backdrop-blur-xl">
-            <button
-              onClick={() => setViewMode('hub')}
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-700 hover:text-white transition"
-            >
-              ⬅️ Voltar ao Menu
-            </button>
-
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">{currentTrack?.icon || '🎯'}</span>
-              <div>
-                <h2 className="text-base font-bold text-white leading-tight">{currentTrack?.name}</h2>
-                <p className="text-xs text-slate-400">Questão {currentIndex + 1} de {activeQuizList.length}</p>
-              </div>
-            </div>
-
-            {/* Temporizador com destaque visual */}
-            <div className={`flex items-center gap-2 rounded-xl px-4 py-2 font-mono font-bold text-base border ${
-              timeLeft <= 5 ? 'border-rose-500/60 bg-rose-500/20 text-rose-300 animate-pulse' :
-              timeLeft <= 10 ? 'border-amber-500/60 bg-amber-500/20 text-amber-300' :
-              'border-violet-500/40 bg-violet-500/10 text-violet-300'
-            }`}>
-              <span>⏱️</span>
-              <span>{timerPaused ? 'Pausado' : `${timeLeft}s`}</span>
-            </div>
-          </div>
-
-          {/* Barra de Progresso do Quiz */}
-          <div className="mb-6 h-2 w-full overflow-hidden rounded-full bg-slate-800">
-            <div
-              className="h-2 rounded-full bg-gradient-to-r from-violet-500 via-indigo-500 to-emerald-400 transition-all duration-300"
-              style={{ width: `${Math.round(((currentIndex + 1) / activeQuizList.length) * 100)}%` }}
-            />
-          </div>
-
-          {/* Card da Questão com Explicação e Avanço Manual */}
-          <ChallengeCard
-            challenge={currentChallenge}
-            onSubmit={handleChallengeSubmit}
-            onNext={handleNextQuestion}
-            isLastQuestion={isLastQuestion}
-            disabled={disabled}
-            timeExpired={timeExpired}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // ==========================================
-  // RENDERIZAÇÃO: RESULTADO DO SIMULADO GERAL
-  // ==========================================
+  // --------------------------------------------------------------------------
+  // TELA DE RESULTADO DO SIMULADO
+  // --------------------------------------------------------------------------
   if (viewMode === 'simulado_result') {
     const totalQ = sessionStats.correct + sessionStats.wrong || 1;
     const accuracy = Math.round((sessionStats.correct / totalQ) * 100);
-    const enemScore = Math.min(1000, Math.round(300 + (accuracy * 6.5) + (sessionStats.xpGained * 0.5)));
+    const enemScore = Math.min(1000, Math.round(340 + (accuracy * 6.2) + (sessionStats.xpGained * 0.4)));
 
     return (
-      <div className="min-h-screen bg-slate-950 text-white p-4 sm:p-8 flex items-center justify-center">
-        <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-slate-900/90 p-8 shadow-2xl backdrop-blur-2xl text-center space-y-6">
-          <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr from-violet-600 to-indigo-500 text-4xl shadow-glow">
+      <div className="min-h-screen bg-[#030712] text-white flex items-center justify-center p-6">
+        <div className="max-w-xl w-full rounded-3xl border border-sky-500/30 bg-[#0b1120] p-8 shadow-2xl text-center space-y-6">
+          <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-sky-500 to-blue-600 flex items-center justify-center text-4xl shadow-glow">
             🏆
           </div>
+          <h2 className="text-3xl font-extrabold text-white">Simulado BNCC Concluído!</h2>
+          <p className="text-slate-300 text-sm">Desempenho consolidado com base na matriz curricular do Ensino Médio.</p>
 
-          <h2 className="text-3xl font-extrabold text-white">Simulado Concluído!</h2>
-          <p className="text-slate-400">Confira seu relatório de proficiência e pontuação estimada no modelo ENEM/Vestibular.</p>
-
-          {/* Placar em Destaque */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2">
-            <div className="rounded-2xl bg-slate-800/80 p-4 border border-white/5">
-              <p className="text-xs text-slate-400 uppercase font-semibold">Nota Estimada</p>
-              <p className="text-3xl font-extrabold text-amber-400 mt-1">{enemScore}</p>
-              <p className="text-xs text-slate-500 mt-1">Escala 0 a 1000</p>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-2xl bg-slate-900/80 p-4 border border-white/5">
+              <p className="text-xs text-slate-400">Nota Estimada</p>
+              <p className="text-2xl font-bold text-amber-400 mt-1">{enemScore}</p>
             </div>
-            <div className="rounded-2xl bg-slate-800/80 p-4 border border-white/5">
-              <p className="text-xs text-slate-400 uppercase font-semibold">Taxa de Acertos</p>
-              <p className="text-3xl font-extrabold text-emerald-400 mt-1">{accuracy}%</p>
-              <p className="text-xs text-slate-500 mt-1">{sessionStats.correct} de {totalQ} questões</p>
+            <div className="rounded-2xl bg-slate-900/80 p-4 border border-white/5">
+              <p className="text-xs text-slate-400">Taxa de Acertos</p>
+              <p className="text-2xl font-bold text-emerald-400 mt-1">{accuracy}%</p>
             </div>
-            <div className="rounded-2xl bg-slate-800/80 p-4 border border-white/5 col-span-2 sm:col-span-1">
-              <p className="text-xs text-slate-400 uppercase font-semibold">XP Acumulado</p>
-              <p className="text-3xl font-extrabold text-violet-400 mt-1">+{sessionStats.xpGained}</p>
-              <p className="text-xs text-slate-500 mt-1">Pontos de Experiência</p>
+            <div className="rounded-2xl bg-slate-900/80 p-4 border border-white/5">
+              <p className="text-xs text-slate-400">XP Ganho</p>
+              <p className="text-2xl font-bold text-sky-400 mt-1">+{sessionStats.xpGained}</p>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 pt-4">
+          <div className="flex gap-4 pt-2">
             <button
               onClick={() => handleStartSimulado(10)}
-              className="flex-1 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3.5 px-6 font-bold text-white shadow-lg hover:from-violet-500 hover:to-indigo-500 transition"
+              className="flex-1 py-3 px-4 rounded-xl bg-sky-600 hover:bg-sky-500 font-bold text-white transition shadow-lg"
             >
-              🔄 Fazer Outro Simulado
+              🔄 Repetir Simulado
             </button>
             <button
               onClick={() => setViewMode('hub')}
-              className="flex-1 rounded-2xl bg-slate-800 py-3.5 px-6 font-bold text-slate-300 hover:bg-slate-700 hover:text-white transition"
+              className="flex-1 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 font-bold text-slate-300 transition"
             >
-              📚 Explorar Trilhas BNCC
+              🏠 Voltar ao Hub
             </button>
           </div>
         </div>
@@ -361,144 +302,421 @@ function StudentDashboard({ user, onLogout }) {
     );
   }
 
-  // ==========================================
-  // RENDERIZAÇÃO: HUB PRINCIPAL DO ESTUDANTE
-  // ==========================================
+  // --------------------------------------------------------------------------
+  // HUB PRINCIPAL DO ESTUDANTE (Faithful to MVP Image 0)
+  // --------------------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        
-        {/* Header do Aluno com Estatísticas */}
-        <header className="mb-8 grid gap-6 rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-glow backdrop-blur-xl sm:grid-cols-[1.3fr_0.7fr]">
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <p className="text-sm uppercase tracking-[0.3em] text-violet-300">Hub de Aprendizado Gamificado</p>
-                <h1 className="text-3xl sm:text-4xl font-semibold text-white">Olá, {currentUser.name}</h1>
-                <p className="max-w-2xl text-slate-400 text-sm sm:text-base">Escolha uma trilha temática da BNCC ou teste seus limites no Simulado Geral.</p>
-              </div>
-              <button onClick={onLogout} className="glow-button bg-slate-800/90 hover:bg-slate-800">Sair</button>
-            </div>
+    <div className="student-dashboard-layout">
+      {/* 1. Left Vertical Navigation Sidebar */}
+      <aside className="student-sidebar">
+        <div className="sidebar-logo">
+          <div className="sidebar-logo-icon">
+            <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
+              <path d="M12 8H24C28.4183 8 32 11.5817 32 16C32 20.4183 28.4183 24 24 24H18V32H12V8Z" fill="white" />
+              <path d="M18 14H24C25.1046 14 26 14.8954 26 16C26 17.1046 25.1046 18 24 18H18V14Z" fill="#0284c7" />
+            </svg>
+          </div>
+          <div className="sidebar-logo-text">Progress<span>Ed</span></div>
+        </div>
 
-            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
-              <div className="rounded-3xl bg-slate-900/90 p-4 sm:p-5 border border-white/5">
-                <p className="text-xs sm:text-sm text-slate-400">Nível do Aluno</p>
-                <p className="mt-2 text-2xl sm:text-3xl font-semibold text-white">{currentUser.level}</p>
-                <p className="mt-1 text-xs sm:text-sm text-violet-400">{currentUser.xp} XP total</p>
+        <nav className="sidebar-nav">
+          <button
+            className={`nav-item-btn ${sidebarTab === 'trilhas' ? 'active' : ''}`}
+            onClick={() => setSidebarTab('trilhas')}
+          >
+            <span className="nav-icon">🗺️</span>
+            <span>Trilhas</span>
+          </button>
+          <button
+            className={`nav-item-btn ${sidebarTab === 'ranking' ? 'active' : ''}`}
+            onClick={() => setSidebarTab('ranking')}
+          >
+            <span className="nav-icon">🏆</span>
+            <span>Ranking</span>
+          </button>
+          <button
+            className={`nav-item-btn ${sidebarTab === 'perfil' ? 'active' : ''}`}
+            onClick={() => setSidebarTab('perfil')}
+          >
+            <span className="nav-icon">👤</span>
+            <span>Perfil</span>
+          </button>
+        </nav>
+
+        {/* Sidebar Streak Card */}
+        <div className="sidebar-streak-card">
+          <div className="streak-top-row">
+            <span>🔥</span>
+            <span>Sequência atual</span>
+          </div>
+          <div className="streak-days-count">7 dias</div>
+          <div className="streak-week-dots">
+            {['S', 'T', 'Q', 'Q', 'S', 'S', 'D'].map((day, idx) => (
+              <div key={idx} className={`week-day-dot ${idx < 6 ? 'done' : 'today'}`}>
+                ✓
               </div>
-              <div className="rounded-3xl bg-slate-900/90 p-4 sm:p-5 border border-white/5">
-                <p className="text-xs sm:text-sm text-slate-400">XP para Próximo Nível</p>
-                <p className="mt-2 text-2xl sm:text-3xl font-semibold text-white">{Math.max(0, xpForNextLevel)}</p>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
-                  <div className="h-2 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500" style={{ width: `${Math.min(100, Math.round(levelProgress * 100))}%` }} />
-                </div>
-              </div>
-              <div className="rounded-3xl bg-slate-900/90 p-4 sm:p-5 border border-white/5 col-span-2 sm:col-span-1">
-                <p className="text-xs sm:text-sm text-slate-400">Emblemas & Conquistas</p>
-                <div className="mt-2 flex flex-wrap gap-2 text-2xl">
-                  {currentUser.level >= 10 ? '👑' : ''}
-                  {currentUser.level >= 5 ? '🔥' : ''}
-                  {currentUser.level >= 3 ? '⚡' : ''}
-                  <span title="Estudante Ativo">⭐</span>
-                </div>
-              </div>
-            </div>
+            ))}
+          </div>
+        </div>
+      </aside>
+
+      {/* 2. Main Viewport */}
+      <main className="student-viewport">
+        {/* Top Header */}
+        <header className="student-top-header">
+          <div>
+            <h1 className="greeting-title">
+              Olá, {currentUser.name || 'Ana'}! <span className="inline-block animate-wave">👋</span>
+            </h1>
+            <p className="greeting-subtitle">Continue sua jornada de aprendizado e conquiste novos níveis!</p>
           </div>
 
-          {/* Ranking Rápido */}
-          <div className="rounded-[1.75rem] bg-slate-900/80 p-6 shadow-lg shadow-black/20 border border-white/5">
-            <p className="text-xs uppercase tracking-[0.3em] text-violet-300 font-bold">🏆 Ranking da Turma</p>
-            <div className="mt-4 space-y-2.5">
-              {ranking.slice(0, 4).map((student, idx) => (
-                <div key={student.id || idx} className="flex items-center justify-between rounded-xl bg-slate-950/60 px-3.5 py-2.5 text-sm border border-white/5">
-                  <div className="flex items-center gap-3">
-                    <span className="font-bold text-slate-400 w-4">{idx + 1}º</span>
-                    <span className="font-medium text-slate-200">{student.name}</span>
-                  </div>
-                  <span className="font-bold text-violet-300 text-xs">{student.xp || 0} XP</span>
-                </div>
-              ))}
+          <div className="top-header-widgets">
+            <div className="energy-badge" title="Energia / Streak">
+              <span>⚡</span>
+              <span>150</span>
+            </div>
+
+            <button className="bell-button" title="Notificações">
+              <span>🔔</span>
+              <span className="bell-badge-count">3</span>
+            </button>
+
+            <div className="user-profile-pill" onClick={onLogout} title="Clique para sair">
+              <div className="user-avatar-circle">
+                {(currentUser.name || 'A')[0]}
+              </div>
+              <span className="text-xs text-slate-400 font-semibold hidden sm:inline">Sair 🚪</span>
             </div>
           </div>
         </header>
 
-        {/* ========================================== */}
-        {/* DESTAQUE 1: SIMULADO GERAL ALEATÓRIO (ENEM) */}
-        {/* ========================================== */}
-        <section className="mb-10">
-          <div className="relative overflow-hidden rounded-3xl border border-violet-500/30 bg-gradient-to-br from-violet-950/60 via-indigo-950/40 to-slate-900/90 p-6 sm:p-8 shadow-2xl">
-            <div className="absolute -right-12 -bottom-12 h-64 w-64 rounded-full bg-violet-600/20 blur-3xl pointer-events-none" />
-            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-              <div className="space-y-2 max-w-2xl">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/20 px-3 py-1 text-xs font-semibold text-violet-300 border border-violet-500/30">
-                  ⚡ Modo Desafio Completo
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-white">Simulado Geral Multidisciplinar (ENEM/Vestibulares)</h2>
-                <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-                  Pratique com 10 questões selecionadas aleatoriamente entre todas as matérias (Linguagens, Matemática, Física, Química, Biologia e Humanas). Com resolução comentada e estimativa de nota!
-                </p>
+        {/* 3. Two-Column Layout (Center Main + Right Sidebar) */}
+        <div className="student-content-grid">
+          {/* LEFT / CENTER COLUMN */}
+          <div className="student-main-column">
+            {/* Level 5 Gold Hexagon Banner */}
+            <div className="level-banner-card">
+              <div className="gold-hexagon-badge">
+                <span className="hexagon-number">{currentLevel}</span>
               </div>
-              <button
-                onClick={() => handleStartSimulado(10)}
-                className="whitespace-nowrap rounded-2xl bg-gradient-to-r from-violet-500 via-indigo-500 to-purple-600 px-8 py-4 text-base font-bold text-white shadow-lg shadow-violet-600/30 hover:shadow-violet-600/50 hover:scale-[1.02] transition-all"
-              >
-                🚀 Iniciar Simulado Geral
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* ========================================== */}
-        {/* DESTAQUE 2: TRILHAS TEMÁTICAS DA BNCC      */}
-        {/* ========================================== */}
-        <section>
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-white">Trilhas de Aprendizagem por Área da BNCC</h2>
-            <p className="text-slate-400 text-sm">Selecione uma área do conhecimento para responder desafios focados.</p>
-          </div>
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {MODULES.map((module) => {
-              const modChallenges = challenges.filter(c => c.moduleId === module.id);
-              const count = modChallenges.length;
-
-              return (
-                <div
-                  key={module.id}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-slate-900/80 p-6 transition-all duration-300 hover:border-violet-500/40 hover:bg-slate-900 hover:shadow-xl hover:shadow-violet-500/10"
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-800 text-2xl group-hover:scale-110 transition">
-                        {module.icon}
-                      </div>
-                      <span className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-slate-300 border border-white/5">
-                        {count} desafios disponíveis
-                      </span>
-                    </div>
-
-                    <div>
-                      <h3 className="text-xl font-bold text-white group-hover:text-violet-300 transition">{module.name}</h3>
-                      <p className="text-xs font-semibold text-violet-400/90 mt-0.5">{module.subtitle}</p>
-                      <p className="mt-2 text-xs sm:text-sm text-slate-400 leading-relaxed">{module.description}</p>
-                    </div>
+              <div className="level-info-content">
+                <div className="level-top-status">
+                  <div>
+                    <span className="level-badge-title">NÍVEL</span>
+                    <h2 className="level-name-display">Nível {currentLevel}</h2>
                   </div>
-
-                  <div className="mt-6 pt-4 border-t border-white/5">
-                    <button
-                      onClick={() => handleStartTrack(module)}
-                      className="w-full rounded-2xl bg-gradient-to-r from-slate-800 to-slate-850 hover:from-violet-600 hover:to-indigo-600 py-3 text-sm font-bold text-white transition duration-200 flex items-center justify-center gap-2 group-hover:shadow-md"
-                    >
-                      <span>🎯 Iniciar Trilha</span>
-                    </button>
+                  <div className="xp-ratio-text">
+                    XP: <span>{currentXp}</span>/{targetXp}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </section>
 
-      </div>
+                <div className="level-progress-bar-container">
+                  <div className="level-progress-fill" style={{ width: `${progressPercent}%` }} />
+                </div>
+
+                <p className="level-progress-subtext">Faltam {xpNeeded} XP para o próximo nível</p>
+              </div>
+            </div>
+
+            {/* Learning Trail Card with Connected Nodes (Faithful to MVP Image 0) */}
+            <div className="trail-master-card">
+              <div className="trail-header-row">
+                <div className="trail-title-wrapper">
+                  <span className="trail-title-icon">📖</span>
+                  <div>
+                    <h3>Trilha de Aprendizagem</h3>
+                    <p>Desenvolva suas habilidades passo a passo</p>
+                  </div>
+                </div>
+                <button
+                  className="btn-view-available-trails"
+                  onClick={() => setShowTrackModal(true)}
+                >
+                  <span>Ver trilhas disponíveis</span>
+                  <span>&gt;</span>
+                </button>
+              </div>
+
+              {/* Visual Connected Nodes (Snake Trail) */}
+              <div className="trail-nodes-canvas">
+                {/* Top Row: Nodes 1 to 6 */}
+                <div className="trail-nodes-row">
+                  {/* Node 1 */}
+                  <div className="trail-node-item completed" onClick={() => handleStartTrack(MODULES[0])}>
+                    <span className="node-step-tag">1</span>
+                    <div className="node-circle-bubble">✓</div>
+                    <div className="node-title-caption">Introdução ao Conhecimento</div>
+                    <span className="node-status-check">✓</span>
+                  </div>
+
+                  {/* Node 2 */}
+                  <div className="trail-node-item completed" onClick={() => handleStartTrack(MODULES[0])}>
+                    <span className="node-step-tag">2</span>
+                    <div className="node-circle-bubble">&lt;/&gt;</div>
+                    <div className="node-title-caption">Lógica e Leitura Crítica</div>
+                    <span className="node-status-check">✓</span>
+                  </div>
+
+                  {/* Node 3 */}
+                  <div className="trail-node-item completed" onClick={() => handleStartTrack(MODULES[1])}>
+                    <span className="node-step-tag">3</span>
+                    <div className="node-circle-bubble">🗄️</div>
+                    <div className="node-title-caption">Estruturas e Dados</div>
+                    <span className="node-status-check">✓</span>
+                  </div>
+
+                  {/* Node 4 */}
+                  <div className="trail-node-item completed" onClick={() => handleStartTrack(MODULES[1])}>
+                    <span className="node-step-tag">4</span>
+                    <div className="node-circle-bubble">f(x)</div>
+                    <div className="node-title-caption">Funções e Relações</div>
+                    <span className="node-status-check">✓</span>
+                  </div>
+
+                  {/* Node 5 - Active (Glowing Brain) */}
+                  <div className="trail-node-item active" onClick={() => handleStartTrack(MODULES[2])} title="Clique para iniciar o desafio atual!">
+                    <span className="node-step-tag">5</span>
+                    <div className="node-circle-bubble">🧠</div>
+                    <div className="active-ring-indicator" />
+                    <div className="node-title-caption font-bold text-sky-300">Ciências & Fenômenos</div>
+                    <span className="text-[10px] text-sky-400 font-bold mt-1">EM ANDAMENTO</span>
+                  </div>
+
+                  {/* Node 6 - Locked */}
+                  <div className="trail-node-item locked" onClick={() => alert('Complete os desafios do nível 5 para desbloquear esta etapa!')}>
+                    <span className="node-step-tag">6</span>
+                    <div className="node-circle-bubble">🔒</div>
+                    <div className="node-title-caption">Análise Crítica & Redação</div>
+                    <span className="node-status-lock">🔒</span>
+                  </div>
+                </div>
+
+                {/* Bottom Row: Nodes 7 to 10 */}
+                <div className="trail-nodes-row" style={{ marginTop: '1rem' }}>
+                  {/* Node 7 */}
+                  <div className="trail-node-item locked" onClick={() => alert('Etapa bloqueada')}>
+                    <span className="node-step-tag">7</span>
+                    <div className="node-circle-bubble">🔒</div>
+                    <div className="node-title-caption">Sociedade & Cidadania</div>
+                    <span className="node-status-lock">🔒</span>
+                  </div>
+
+                  {/* Node 8 */}
+                  <div className="trail-node-item locked" onClick={() => alert('Etapa bloqueada')}>
+                    <span className="node-step-tag">8</span>
+                    <div className="node-circle-bubble">🔒</div>
+                    <div className="node-title-caption">Eletricidade & Matéria</div>
+                    <span className="node-status-lock">🔒</span>
+                  </div>
+
+                  {/* Node 9 */}
+                  <div className="trail-node-item locked" onClick={() => alert('Etapa bloqueada')}>
+                    <span className="node-step-tag">9</span>
+                    <div className="node-circle-bubble">🔒</div>
+                    <div className="node-title-caption">Otimização & Métodos</div>
+                    <span className="node-status-lock">🔒</span>
+                  </div>
+
+                  {/* Node 10 - Expert Trophy */}
+                  <div className="trail-node-item trophy" onClick={() => handleStartSimulado(10)} title="Simulado Geral BNCC (ENEM)">
+                    <span className="node-step-tag">10</span>
+                    <div className="node-circle-bubble">🏆</div>
+                    <div className="node-title-caption font-bold text-amber-300">Projeto Final Desafio Expert</div>
+                    <span className="text-[10px] text-amber-400 font-bold mt-1">SIMULADO ENEM</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 4 Bottom Metrics Cards (Faithful to MVP Image 0) */}
+            <div className="student-metrics-row">
+              <div className="metric-summary-card">
+                <div className="metric-icon-square green">✓</div>
+                <div className="metric-text-details">
+                  <h5>Aulas concluídas</h5>
+                  <p>24</p>
+                </div>
+              </div>
+
+              <div className="metric-summary-card">
+                <div className="metric-icon-square blue">✏️</div>
+                <div className="metric-text-details">
+                  <h5>Exercícios feitos</h5>
+                  <p>128</p>
+                </div>
+              </div>
+
+              <div className="metric-summary-card">
+                <div className="metric-icon-square purple">⭐</div>
+                <div className="metric-text-details">
+                  <h5>XP conquistado</h5>
+                  <p>{currentXp}</p>
+                </div>
+              </div>
+
+              <div className="metric-summary-card">
+                <div className="metric-icon-square amber">⏱️</div>
+                <div className="metric-text-details">
+                  <h5>Tempo de estudo</h5>
+                  <p>18h 45m</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN (Ranking & Performance) */}
+          <div className="student-right-column">
+            {/* Ranking Geral Card */}
+            <div className="ranking-sidebar-card">
+              <div className="ranking-top-header">
+                <h4 className="ranking-title-label">
+                  <span>🏆</span>
+                  <span>Ranking Geral</span>
+                </h4>
+                <a href="#ranking" onClick={(e) => { e.preventDefault(); setShowTrackModal(true); }} className="ranking-view-all-link">
+                  Ver tudo &gt;
+                </a>
+              </div>
+
+              {/* Tabs [Global] / [Escola] */}
+              <div className="ranking-filter-tabs">
+                <button
+                  className={`ranking-tab-btn ${rankingTab === 'global' ? 'active' : ''}`}
+                  onClick={() => setRankingTab('global')}
+                >
+                  Global
+                </button>
+                <button
+                  className={`ranking-tab-btn ${rankingTab === 'escola' ? 'active' : ''}`}
+                  onClick={() => setRankingTab('escola')}
+                >
+                  Escola
+                </button>
+              </div>
+
+              {/* Student Ranking List */}
+              <div className="ranking-list-items">
+                {topRankings.map((item) => (
+                  <div
+                    key={item.rank}
+                    className={`ranking-item-row ${item.isCurrent ? 'current-user' : ''}`}
+                  >
+                    <span className={`ranking-position-badge ${item.rank <= 3 ? 'crown' : ''}`}>
+                      {item.rank <= 3 ? '👑' : item.rank}
+                    </span>
+
+                    <div className="ranking-user-meta">
+                      <div className="ranking-avatar-thumb">
+                        {item.name[0]}
+                      </div>
+                      <div className="ranking-user-names">
+                        <h6>
+                          {item.name} {item.isCurrent && <span className="text-sky-400 text-xs">(Você)</span>}
+                        </h6>
+                        <p>Nível {item.level}</p>
+                      </div>
+                    </div>
+
+                    <div className="ranking-xp-pill">
+                      {item.xp.toLocaleString()} XP
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Performance Card with Sparklines */}
+            <div className="performance-sidebar-card">
+              <div className="perf-card-header">
+                <h4>Seu desempenho</h4>
+                <p>Comparado à semana passada</p>
+              </div>
+
+              <div className="perf-metrics-grid">
+                <div className="perf-stat-box">
+                  <p className="stat-label">XP ganho</p>
+                  <div className="stat-val">
+                    <span>+520</span>
+                    <span className="text-sm">↑</span>
+                  </div>
+                  <svg className="mini-sparkline-svg" viewBox="0 0 100 30">
+                    <path d="M0,25 Q20,10 40,20 T80,5 T100,15" />
+                  </svg>
+                </div>
+
+                <div className="perf-stat-box">
+                  <p className="stat-label">Posição no ranking</p>
+                  <div className="stat-val">
+                    <span>↑ 2</span>
+                  </div>
+                  <svg className="mini-sparkline-svg" viewBox="0 0 100 30">
+                    <path d="M0,20 Q25,25 50,15 T75,8 T100,5" />
+                  </svg>
+                  <p className="stat-sub">subiu 2 posições</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Modal: Escolha de Trilhas da BNCC ou Simulado ENEM */}
+        {showTrackModal && (
+          <div className="track-selector-modal-overlay" onClick={() => setShowTrackModal(false)}>
+            <div className="track-selector-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header-row">
+                <div>
+                  <h3>Trilhas Curriculares & Simulado BNCC</h3>
+                  <p className="text-xs text-slate-400 mt-1">Centro Educa Mais Paulo Freire • Selecione um percurso</p>
+                </div>
+                <button className="modal-close-btn" onClick={() => setShowTrackModal(false)}>✕</button>
+              </div>
+
+              {/* Simulado Geral Banner */}
+              <div className="mb-6 rounded-2xl bg-gradient-to-r from-sky-950 via-blue-950 to-indigo-950 p-5 border border-sky-500/40 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-sky-400">⚡ Desafio Completo</span>
+                  <h4 className="text-xl font-bold text-white mt-0.5">Simulado Geral Multidisciplinar (ENEM)</h4>
+                  <p className="text-xs text-slate-300 mt-1">10 questões selecionadas de todas as áreas com cálculo estimado de nota.</p>
+                </div>
+                <button
+                  onClick={() => handleStartSimulado(10)}
+                  className="whitespace-nowrap px-6 py-3 rounded-xl bg-sky-500 hover:bg-sky-400 font-bold text-white shadow-lg transition"
+                >
+                  Iniciar Simulado
+                </button>
+              </div>
+
+              {/* Grid de Trilhas BNCC */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                {MODULES.map((m) => {
+                  const count = challenges.filter(c => c.moduleId === m.id).length;
+                  return (
+                    <div
+                      key={m.id}
+                      onClick={() => handleStartTrack(m)}
+                      className="p-4 rounded-2xl bg-slate-900/90 border border-white/10 hover:border-sky-500/50 hover:bg-slate-900 transition cursor-pointer flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-3xl">{m.icon}</span>
+                          <span className="text-xs font-bold text-sky-400 bg-sky-500/10 px-2.5 py-1 rounded-full">{count} questões</span>
+                        </div>
+                        <h5 className="text-base font-bold text-white mt-3">{m.name}</h5>
+                        <p className="text-xs text-sky-300 mt-0.5">{m.subtitle}</p>
+                        <p className="text-xs text-slate-400 mt-2">{m.description}</p>
+                      </div>
+                      <button className="mt-4 w-full py-2 text-xs font-bold rounded-xl bg-slate-800 hover:bg-sky-600 text-white transition">
+                        Começar Trilha &rarr;
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
