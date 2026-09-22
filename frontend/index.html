@@ -18,6 +18,10 @@
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23667eea' width='192' height='192'/><text x='50%' y='50%' font-size='100' fill='white' text-anchor='middle' dominant-baseline='middle' font-weight='bold'>PE</text></svg>" />
     
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
     <title>ProgressEd - Aprenda Jogando</title>
   </head>
   <body>
@@ -28,10 +32,22 @@
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/service-worker.js')
             .then(registration => {
-              console.log('Service Worker registrado com sucesso:', registration);
+              // Verifica se há atualizações do service worker imediatamente
+              registration.update();
+              registration.onupdatefound = () => {
+                const installing = registration.installing;
+                if (installing) {
+                  installing.onstatechange = () => {
+                    if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+                      console.log('[ProgressEd] Nova versão detectada, atualizando...');
+                      window.location.reload();
+                    }
+                  };
+                }
+              };
             })
             .catch(error => {
-              console.error('Erro ao registrar Service Worker:', error);
+              console.warn('Service Worker não registrado:', error);
             });
         });
       }
