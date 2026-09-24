@@ -1,5 +1,5 @@
 // defaultChallenges.js - Banco completo de 131 desafios curriculares da BNCC
-export const DEFAULT_CHALLENGES = [
+module.exports = [
   {
     "id": 12,
     "moduleId": 1,
@@ -1965,15 +1965,4 @@ export const DEFAULT_CHALLENGES = [
     "explanation": "A alternativa correta é a (B). Compreender este conceito consolida as competências essenciais da BNCC em Projeto de Vida & Tecnologia.",
     "xpReward": 20
   }
-];
-
-export const DEFAULT_RANKING = [
-  { id: 1, name: 'Lucas Mendes', level: 8, xp: 3250, school: 'CE Paulo Freire' },
-  { id: 2, name: 'Mariana Silva', level: 7, xp: 2980, school: 'CE Paulo Freire' },
-  { id: 3, name: 'Pedro Henrique', level: 7, xp: 2750, school: 'CE Paulo Freire' },
-  { id: 4, name: 'Beatriz Oliveira', level: 6, xp: 2450, school: 'CE Paulo Freire' },
-  { id: 5, name: 'Amberson Rogers', level: 5, xp: 2150, school: 'CE Paulo Freire' },
-  { id: 6, name: 'Weldes Reis', level: 5, xp: 2100, school: 'CE Paulo Freire' },
-  { id: 7, name: 'Kelly Lorrany', level: 5, xp: 1950, school: 'CE Paulo Freire' },
-  { id: 8, name: 'Ana Beatriz Sousa', level: 4, xp: 1600, school: 'CE Paulo Freire' }
 ];

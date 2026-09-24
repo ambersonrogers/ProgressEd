@@ -1,155 +1,134 @@
--- Script para popular a tabela challenges com questões de todas as disciplinas do Ensino Médio
--- Execute este script no Supabase SQL Editor
-
--- Limpar tabela existente
+-- Populate challenges with all 131 BNCC challenges
 DELETE FROM challenges;
-
--- Resetar sequence do ID
-ALTER SEQUENCE challenges_id_seq RESTART WITH 1;
-
--- Inserir desafios de Matemática
-INSERT INTO challenges (title, description, question, option_a, option_b, option_c, option_d, correct_answer, xp_reward, difficulty, subject, module_id) VALUES
-('Raiz Quadrada', 'Questão básica de matemática sobre raiz quadrada', 'Qual é a raiz quadrada de 144?', '10', '11', '12', '13', 'C', 10, 1, 'Matemática', 1),
-('Porcentagem', 'Cálculo de porcentagem básica', 'Quanto é 15% de 200?', '25', '30', '35', '40', 'B', 10, 1, 'Matemática', 1),
-('Valor de Pi', 'Conhecimento sobre constantes matemáticas', 'Qual é o valor de π (pi) aproximado?', '3.14', '3.15', '3.16', '3.17', 'A', 15, 1, 'Matemática', 1),
-('Potenciação', 'Cálculo de potência básica', 'Quanto é 2³?', '6', '8', '9', '12', 'B', 10, 1, 'Matemática', 1),
-('Área do Círculo', 'Fórmula da área do círculo', 'Qual é a fórmula da área do círculo?', 'πr²', '2πr', 'πr', 'r²', 'A', 15, 2, 'Matemática', 2),
-('Derivada', 'Conceito básico de derivada', 'Quanto é a derivada de x²?', 'x', '2x', '2', 'x²', 'B', 20, 2, 'Matemática', 2),
-('Seno de 90°', 'Valor do seno de 90 graus', 'Qual é o seno de 90°?', '0', '0.5', '1', '-1', 'C', 15, 2, 'Matemática', 2),
-('Integral', 'Cálculo de integral indefinida', 'Quanto é ∫x dx?', 'x²/2 + C', 'x² + C', 'x + C', '2x + C', 'A', 25, 3, 'Matemática', 3),
-('Equação Quadrática', 'Resolução de equação do segundo grau', 'Qual é a solução de x² - 4 = 0?', 'x = ±2', 'x = 2', 'x = -2', 'x = 4', 'A', 20, 2, 'Matemática', 3),
-('Limite', 'Conceito de limite em cálculo', 'Quanto é o limite de (x²-1)/(x-1) quando x→1?', '1', '2', '0', '∞', 'B', 25, 3, 'Matemática', 3);
-
--- Inserir desafios de Física
-INSERT INTO challenges (question, option_a, option_b, option_c, option_d, correct_answer, xp_reward, difficulty, subject, module_id) VALUES
-('Qual é a unidade de força no SI?', 'Newton', 'Joule', 'Watt', 'Pascal', 'A', 10, 1, 'Física', 1),
-('Quanto é a aceleração da gravidade na Terra?', '8.9 m/s²', '9.8 m/s²', '10.2 m/s²', '11.1 m/s²', 'B', 15, 1, 'Física', 1),
-('Qual lei de Newton diz que "ação e reação são iguais e opostas"?', '1ª Lei', '2ª Lei', '3ª Lei', 'Lei da Gravitação', 'C', 15, 2, 'Física', 1),
-('Qual é a fórmula da velocidade?', 'd/t', 'd×t', 't/d', 'd+t', 'A', 10, 1, 'Física', 2),
-('Quanto é a velocidade da luz no vácuo?', '300.000 km/s', '299.792.458 m/s', '150.000 km/s', '400.000 km/s', 'B', 20, 2, 'Física', 2),
-('Qual é a unidade de energia?', 'Watt', 'Joule', 'Volt', 'Ampère', 'B', 15, 2, 'Física', 3),
-('O que é trabalho em física?', 'Força × Tempo', 'Força × Distância', 'Força × Velocidade', 'Força × Aceleração', 'B', 15, 2, 'Física', 3),
-('Qual é a lei de Ohm?', 'V = I × R', 'P = V × I', 'F = m × a', 'E = m × c²', 'A', 20, 3, 'Física', 3),
-('Quanto é a carga elementar do elétron?', '-1.6 × 10^-19 C', '+1.6 × 10^-19 C', '-1.6 × 10^-18 C', '+1.6 × 10^-18 C', 'A', 25, 3, 'Física', 3),
-('Qual é a frequência de um som de 440 Hz?', '440 vibrações/s', '440 metros/s', '440 newtons', '440 joules', 'A', 15, 2, 'Física', 4);
-
--- Inserir desafios de Química
-INSERT INTO challenges (question, option_a, option_b, option_c, option_d, correct_answer, xp_reward, difficulty, subject, module_id) VALUES
-('Qual é o símbolo do Oxigênio?', 'O', 'Ox', 'O2', 'O3', 'A', 10, 1, 'Química', 1),
-('Quantos elétrons tem o átomo de Carbono?', '4', '6', '8', '12', 'B', 10, 1, 'Química', 1),
-('Qual é a fórmula da água?', 'H2O', 'HO2', 'H2O2', 'HO', 'A', 10, 1, 'Química', 1),
-('O que é um ácido?', 'pH > 7', 'pH = 7', 'pH < 7', 'pH > 14', 'C', 15, 2, 'Química', 2),
-('Qual é a reação de combustão?', 'C + O2 → CO2', '2H2 + O2 → 2H2O', 'Na + Cl → NaCl', 'CaCO3 → CaO + CO2', 'A', 15, 2, 'Química', 2),
-('Quanto é a massa molar do H2O?', '16 g/mol', '18 g/mol', '20 g/mol', '22 g/mol', 'B', 15, 2, 'Química', 3),
-('Qual é o número atômico do Hidrogênio?', '1', '2', '3', '4', 'A', 10, 1, 'Química', 3),
-('O que é uma ligação iônica?', 'Compartilhamento de elétrons', 'Transferência de elétrons', 'Atração entre moléculas', 'Ligação metálica', 'B', 20, 3, 'Química', 3),
-('Qual é a lei de Lavoisier?', 'Lei da Conservação da Massa', 'Lei dos Gases', 'Lei de Boyle', 'Lei de Charles', 'A', 20, 3, 'Química', 4),
-('Quanto é o pH neutro?', '0', '7', '14', '1', 'B', 10, 1, 'Química', 4);
-
--- Inserir desafios de Biologia
-INSERT INTO challenges (question, option_a, option_b, option_c, option_d, correct_answer, xp_reward, difficulty, subject, module_id) VALUES
-('Qual é a unidade básica da vida?', 'Átomo', 'Molécula', 'Célula', 'Tecido', 'C', 10, 1, 'Biologia', 1),
-('Onde está localizado o DNA?', 'Citoplasma', 'Núcleo', 'Mitocôndria', 'Ribossomo', 'B', 15, 1, 'Biologia', 1),
-('Qual é a função da mitocôndria?', 'Produzir energia', 'Sintetizar proteínas', 'Armazenar água', 'Controlar divisão celular', 'A', 15, 2, 'Biologia', 1),
-('O que é fotossíntese?', 'Respiração celular', 'Produção de energia luminosa', 'Conversão de luz em energia química', 'Absorção de água', 'C', 20, 2, 'Biologia', 2),
-('Qual é o reino dos animais?', 'Animalia', 'Plantae', 'Fungi', 'Protista', 'A', 10, 1, 'Biologia', 2),
-('O que é evolução?', 'Mudança genética rápida', 'Adaptação gradual das espécies', 'Criação de novas espécies instantaneamente', 'Extinção de espécies', 'B', 20, 3, 'Biologia', 3),
-('Qual é a função dos glóbulos vermelhos?', 'Combater infecções', 'Transportar oxigênio', 'Coagular sangue', 'Produzir anticorpos', 'B', 15, 2, 'Biologia', 3),
-('O que é ecossistema?', 'Comunidade de organismos', 'Ambiente físico', 'Interação entre seres vivos e ambiente', 'Cadeia alimentar', 'C', 20, 3, 'Biologia', 4),
-('Qual é o processo de divisão celular?', 'Mitose', 'Meiose', 'Citocinese', 'Todas as anteriores', 'D', 25, 3, 'Biologia', 4),
-('O que é biodiversidade?', 'Número de espécies em extinção', 'Variedade de vida na Terra', 'Quantidade de água nos oceanos', 'Número de animais domésticos', 'B', 20, 3, 'Biologia', 4);
-
--- Inserir desafios de História
-INSERT INTO challenges (question, option_a, option_b, option_c, option_d, correct_answer, xp_reward, difficulty, subject, module_id) VALUES
-('Em que ano começou a Revolução Francesa?', '1789', '1776', '1799', '1804', 'A', 15, 1, 'História', 1),
-('Quem descobriu o Brasil?', 'Cristóvão Colombo', 'Pedro Álvares Cabral', 'Vasco da Gama', 'Fernão de Magalhães', 'B', 10, 1, 'História', 1),
-('Qual foi a primeira civilização?', 'Grega', 'Romana', 'Egípcia', 'Mesopotâmica', 'D', 15, 2, 'História', 1),
-('Quando terminou a Segunda Guerra Mundial?', '1945', '1939', '1950', '1940', 'A', 10, 1, 'História', 2),
-('Quem foi o primeiro presidente do Brasil?', 'Getúlio Vargas', 'Juscelino Kubitschek', 'Deodoro da Fonseca', 'Floriano Peixoto', 'C', 15, 2, 'História', 2),
-('O que foi o Renascimento?', 'Movimento artístico e cultural', 'Período de guerras', 'Descoberta da América', 'Revolução Industrial', 'A', 20, 3, 'História', 3),
-('Qual foi a causa principal da Primeira Guerra Mundial?', 'Assassinato do arquiduque Francisco Ferdinando', 'Crise econômica', 'Descoberta da eletricidade', 'Colonização da África', 'A', 20, 3, 'História', 3),
-('O que foi o Iluminismo?', 'Movimento filosófico', 'Revolução tecnológica', 'Período de trevas', 'Era das descobertas', 'A', 20, 3, 'História', 4),
-('Quando foi proclamada a República no Brasil?', '1889', '1822', '1891', '1900', 'A', 15, 2, 'História', 4),
-('O que foi a Guerra Fria?', 'Conflito armado direto', 'Confronto ideológico entre EUA e URSS', 'Guerra no Ártico', 'Guerra comercial', 'B', 20, 3, 'História', 4);
-
--- Inserir desafios de Geografia
-INSERT INTO challenges (question, option_a, option_b, option_c, option_d, correct_answer, xp_reward, difficulty, subject, module_id) VALUES
-('Qual é o maior continente?', 'África', 'Ásia', 'América', 'Europa', 'B', 10, 1, 'Geografia', 1),
-('Quantos oceanos existem?', '3', '4', '5', '6', 'C', 10, 1, 'Geografia', 1),
-('Qual é a capital do Brasil?', 'São Paulo', 'Rio de Janeiro', 'Brasília', 'Salvador', 'C', 10, 1, 'Geografia', 1),
-('O que é latitude?', 'Distância leste-oeste', 'Distância norte-sul', 'Altura acima do nível do mar', 'Profundidade abaixo do nível do mar', 'B', 15, 2, 'Geografia', 2),
-('Qual é o maior deserto do mundo?', 'Saara', 'Gobi', 'Atacama', 'Antártida', 'A', 15, 2, 'Geografia', 2),
-('O que é globalização?', 'Interdependência econômica mundial', 'Isolamento de países', 'Guerra entre nações', 'Formação de blocos econômicos', 'A', 20, 3, 'Geografia', 3),
-('Qual é o rio mais longo do mundo?', 'Amazonas', 'Nilo', 'Yangtzé', 'Mississippi', 'B', 15, 2, 'Geografia', 3),
-('O que é urbanização?', 'Crescimento das cidades', 'Diminuição da população urbana', 'Migração para o campo', 'Industrialização rural', 'A', 15, 2, 'Geografia', 4),
-('Qual é o clima predominante no Brasil?', 'Polar', 'Desértico', 'Tropical', 'Temperado', 'C', 15, 2, 'Geografia', 4),
-('O que é sustentabilidade?', 'Exploração máxima dos recursos', 'Desenvolvimento que atende necessidades presentes sem comprometer futuras', 'Crescimento econômico ilimitado', 'Preservação total da natureza', 'B', 20, 3, 'Geografia', 4);
-
--- Inserir desafios de Português
-INSERT INTO challenges (question, option_a, option_b, option_c, option_d, correct_answer, xp_reward, difficulty, subject, module_id) VALUES
-('Qual é a classe gramatical de "casa"?', 'Verbo', 'Substantivo', 'Adjetivo', 'Advérbio', 'B', 10, 1, 'Português', 1),
-('O que é uma metáfora?', 'Comparação direta', 'Comparação indireta', 'Oposição de ideias', 'Repetição de sons', 'B', 15, 2, 'Português', 1),
-('Qual é o plural de "país"?', 'Países', 'País', 'Paízes', 'Paíse', 'A', 10, 1, 'Português', 1),
-('O que é uma oração subordinada?', 'Independente', 'Dependente de outra', 'Sempre interrogativa', 'Sempre exclamativa', 'B', 15, 2, 'Português', 2),
-('Qual é a função do ponto de interrogação?', 'Finalizar afirmações', 'Indicar perguntas', 'Separar ideias', 'Destacar palavras', 'B', 10, 1, 'Português', 2),
-('O que é denotação?', 'Sentido figurado', 'Sentido literal', 'Sentido conotativo', 'Sentido ambíguo', 'B', 15, 2, 'Português', 3),
-('Qual é o antônimo de "alegre"?', 'Triste', 'Feliz', 'Contente', 'Alegre', 'A', 10, 1, 'Português', 3),
-('O que é uma dissertação?', 'Texto narrativo', 'Texto argumentativo', 'Texto descritivo', 'Texto poético', 'B', 20, 3, 'Português', 4),
-('Qual é a norma culta da língua portuguesa?', 'Variante brasileira', 'Variante europeia', 'Ambas são corretas', 'Nenhuma é culta', 'C', 20, 3, 'Português', 4),
-('O que é coesão textual?', 'Relação entre frases', 'Ortografia correta', 'Pontuação adequada', 'Vocabulário rico', 'A', 20, 3, 'Português', 4);
-
--- Inserir desafios de Inglês
-INSERT INTO challenges (question, option_a, option_b, option_c, option_d, correct_answer, xp_reward, difficulty, subject, module_id) VALUES
-('What is the translation of "casa" in English?', 'House', 'Car', 'Tree', 'Book', 'A', 10, 1, 'Inglês', 1),
-('How do you say "obrigado" in English?', 'Please', 'Thank you', 'Sorry', 'Hello', 'B', 10, 1, 'Inglês', 1),
-('What is the past tense of "go"?', 'Goed', 'Went', 'Gone', 'Going', 'B', 15, 1, 'Inglês', 1),
-('Which article is correct: "___ apple" or "___ apple"?', 'A / An', 'An / A', 'The / A', 'A / The', 'B', 15, 2, 'Inglês', 2),
-('What does "beautiful" mean?', 'Feio', 'Bonito', 'Triste', 'Bravo', 'B', 10, 1, 'Inglês', 2),
-('Choose the correct sentence:', 'I go to school yesterday', 'I went to school yesterday', 'I will go to school yesterday', 'I going to school yesterday', 'B', 15, 2, 'Inglês', 3),
-('What is the plural of "child"?', 'Childs', 'Children', 'Childes', 'Childrens', 'B', 15, 2, 'Inglês', 3),
-('What does "breakfast" mean?', 'Almoço', 'Jantar', 'Café da manhã', 'Lanche', 'C', 10, 1, 'Inglês', 4),
-('Choose the correct preposition: "I live ___ Brazil"', 'at', 'on', 'in', 'to', 'C', 15, 2, 'Inglês', 4),
-('What is the comparative of "good"?', 'Gooder', 'Better', 'Best', 'More good', 'B', 15, 2, 'Inglês', 4);
-
--- Inserir desafios de Artes
-INSERT INTO challenges (question, option_a, option_b, option_c, option_d, correct_answer, xp_reward, difficulty, subject, module_id) VALUES
-('Qual é o principal elemento das artes visuais?', 'Som', 'Cor', 'Palavras', 'Movimento', 'B', 10, 1, 'Artes', 1),
-('O que é perspectiva em pintura?', 'Técnica de representação tridimensional', 'Tipo de pincel', 'Cor primária', 'Estilo artístico', 'A', 20, 3, 'Artes', 1),
-('Quem pintou a Mona Lisa?', 'Vincent van Gogh', 'Pablo Picasso', 'Leonardo da Vinci', 'Michelangelo', 'C', 15, 2, 'Artes', 1),
-('O que é barroco na arte?', 'Estilo simples e minimalista', 'Estilo dramático e ornamentado', 'Arte abstrata', 'Arte primitiva', 'B', 20, 3, 'Artes', 2),
-('Qual é o instrumento musical de cordas?', 'Flauta', 'Violino', 'Trompete', 'Bateria', 'B', 10, 1, 'Artes', 2),
-('O que é ritmo em música?', 'Altura dos sons', 'Duração dos sons', 'Intensidade dos sons', 'Timbre dos sons', 'B', 15, 2, 'Artes', 2),
-('Qual é a dança típica brasileira?', 'Tango', 'Samba', 'Flamenco', 'Valsa', 'B', 10, 1, 'Artes', 3),
-('O que é expressionismo?', 'Arte realista', 'Arte que expressa emoções', 'Arte religiosa', 'Arte clássica', 'B', 20, 3, 'Artes', 3),
-('Qual é o movimento artístico do século XX?', 'Renascimento', 'Barroco', 'Cubismo', 'Romantismo', 'C', 20, 3, 'Artes', 4),
-('O que é cenografia?', 'Arte de escrever peças', 'Arte de decorar palcos', 'Arte de dirigir atores', 'Arte de compor músicas', 'B', 15, 2, 'Artes', 4);
-
--- Inserir desafios de Filosofia
-INSERT INTO challenges (question, option_a, option_b, option_c, option_d, correct_answer, xp_reward, difficulty, subject, module_id) VALUES
-('O que estuda a filosofia?', 'Ciências naturais', 'Questões fundamentais da existência', 'Linguagens', 'Matemática', 'B', 15, 2, 'Filosofia', 1),
-('Quem foi Sócrates?', 'Rei de Atenas', 'Filósofo grego', 'Poeta romano', 'Médico egípcio', 'B', 15, 2, 'Filosofia', 1),
-('O que é epistemologia?', 'Teoria do conhecimento', 'Teoria da justiça', 'Teoria da arte', 'Teoria da linguagem', 'A', 20, 3, 'Filosofia', 1),
-('Qual é o método socrático?', 'Máieutica', 'Dialética', 'Retórica', 'Silogismo', 'A', 20, 3, 'Filosofia', 2),
-('O que é "cogito ergo sum"?', 'Penso logo existo', 'Vivo logo penso', 'Sinto logo sou', 'Sei logo existo', 'A', 20, 3, 'Filosofia', 2),
-('Quem foi o autor de "A República"?', 'Aristóteles', 'Platão', 'Sócrates', 'Descartes', 'B', 15, 2, 'Filosofia', 2),
-('O que é ética?', 'Estudo da beleza', 'Estudo do bem e do mal', 'Estudo da verdade', 'Estudo da linguagem', 'B', 15, 2, 'Filosofia', 3),
-('Qual é a corrente filosófica de Nietzsche?', 'Existencialismo', 'Niilismo', 'Positivismo', 'Empirismo', 'B', 25, 3, 'Filosofia', 3),
-('O que é metafísica?', 'Estudo da natureza', 'Estudo do ser como ser', 'Estudo da sociedade', 'Estudo da mente', 'B', 25, 3, 'Filosofia', 4),
-('Quem foi Immanuel Kant?', 'Iluminista alemão', 'Existencialista francês', 'Empirista inglês', 'Fenomenólogo alemão', 'A', 20, 3, 'Filosofia', 4);
-
--- Inserir desafios de Sociologia
-INSERT INTO challenges (question, option_a, option_b, option_c, option_d, correct_answer, xp_reward, difficulty, subject, module_id) VALUES
-('O que estuda a sociologia?', 'Indivíduo isolado', 'Sociedade e relações sociais', 'Animais em grupo', 'Estruturas econômicas', 'B', 15, 2, 'Sociologia', 1),
-('Quem é considerado o pai da sociologia?', 'Karl Marx', 'Émile Durkheim', 'Auguste Comte', 'Max Weber', 'C', 20, 3, 'Sociologia', 1),
-('O que é socialização?', 'Processo de isolamento', 'Processo de integração social', 'Conflito entre classes', 'Mudança cultural rápida', 'B', 15, 2, 'Sociologia', 1),
-('Qual é o conceito de "alienação" em Marx?', 'Integração social', 'Perda da essência humana', 'Igualdade social', 'Mobilidade social', 'B', 25, 3, 'Sociologia', 2),
-('O que é cultura?', 'Apenas costumes materiais', 'Conjunto de valores e normas', 'Somente tradições', 'Exclusivamente arte', 'B', 15, 2, 'Sociologia', 2),
-('Qual é a função da família na sociedade?', 'Apenas econômica', 'Reprodução e socialização', 'Somente religiosa', 'Exclusivamente política', 'B', 15, 2, 'Sociologia', 3),
-('O que é estratificação social?', 'Igualdade entre pessoas', 'Desigualdade social estruturada', 'Mobilidade constante', 'Ausência de classes', 'B', 20, 3, 'Sociologia', 3),
-('Qual é o conceito de "habitus" em Bourdieu?', 'Disposições duradouras', 'Capital econômico', 'Poder político', 'Normas sociais', 'A', 25, 3, 'Sociologia', 4),
-('O que é globalização?', 'Isolamento nacional', 'Interdependência mundial', 'Conflito internacional', 'Independência cultural', 'B', 20, 3, 'Sociologia', 4),
-('Qual é o papel da educação na sociedade?', 'Somente transmissão de conhecimento', 'Reprodução cultural e social', 'Apenas profissional', 'Exclusivamente moral', 'B', 20, 3, 'Sociologia', 4);
-
--- Verificar se tudo foi inserido corretamente
-SELECT COUNT(*) as total_challenges FROM challenges;
-SELECT subject, COUNT(*) as count_by_subject FROM challenges GROUP BY subject ORDER BY subject;
+INSERT INTO challenges (id, title, description, question, option_a, option_b, option_c, option_d, correct_answer, xp_reward, difficulty, subject, module_id) VALUES
+(12, 'Raiz Quadrada Básica', 'Questão básica de matemática sobre raiz quadrada', 'Qual é a raiz quadrada de 144?', '10', '11', '12', '13', 'C', 10, 1, 'Matemática', 1),
+(13, 'Porcentagem Simples', 'Cálculo de porcentagem básica', 'Quanto é 15% de 200?', '25', '30', '35', '40', 'B', 10, 1, 'Matemática', 1),
+(14, 'Símbolo do Oxigênio', 'Conhecimento básico de química', 'Qual é o símbolo do Oxigênio?', 'O', 'Ox', 'O2', 'O3', 'A', 10, 1, 'Química', 1),
+(15, 'Revolução Francesa', 'Evento histórico importante', 'Em que ano começou a Revolução Francesa?', '1789', '1776', '1799', '1804', 'A', 15, 1, 'História', 1),
+(16, 'Maior Continente', 'Conhecimento geográfico básico', 'Qual é o maior continente?', 'África', 'Ásia', 'América', 'Europa', 'B', 10, 1, 'Geografia', 1),
+(17, 'Primeira Lei de Newton', 'Conceito fundamental da física', 'Qual lei de Newton diz que "ação e reação são iguais e opostas"?', '1ª Lei', '2ª Lei', '3ª Lei', 'Lei da Gravitação', 'C', 15, 2, 'Física', 1),
+(18, 'Célula Básica', 'Conceito fundamental da biologia', 'Qual é a unidade básica da vida?', 'Átomo', 'Molécula', 'Célula', 'Tecido', 'C', 10, 1, 'Biologia', 1),
+(19, 'Tradução Básica', 'Vocabulário básico em inglês', 'What is the translation of "casa" in English?', 'House', 'Car', 'Tree', 'Book', 'A', 10, 1, 'Inglês', 1),
+(20, 'Ortografia', 'Uso correto das letras e acentos', 'Qual palavra está escrita corretamente?', 'A gente', 'Agente', 'Acente', 'Ajente', 'A', 15, 1, 'Português', 1),
+(21, 'Acentuação Gráfica', 'Regras de acentuação das palavras', 'Qual palavra deve ser acentuada?', 'Tenis', 'Tênis', 'Tenís', 'Ténis', 'B', 15, 1, 'Português', 1),
+(22, 'Crase', 'Uso do acento indicativo de crase', 'Marque a opção correta: "Fui ___ festa"', 'a', 'à', 'há', 'a há', 'B', 20, 2, 'Português', 1),
+(23, 'Concordância Verbal', 'Regras de concordância', 'Qual frase está correta?', 'Fazem dois anos', 'Faz dois anos', 'Fazem dois ano', 'Faz dois anos atrás', 'B', 20, 2, 'Português', 1),
+(24, 'Figuras de Linguagem', 'Identificação de metáfora, ironia, etc.', '"O tempo voa" é um exemplo de:', 'Ironia', 'Metáfora', 'Eufemismo', 'Hipérbole', 'B', 15, 1, 'Português', 1),
+(25, 'Gêneros Textuais', 'Identificação de diferentes gêneros', 'Uma receita de bolo é um texto:', 'Narrativo', 'Descritivo', 'Injuntivo', 'Dissertativo', 'C', 15, 1, 'Português', 1),
+(26, 'Interpretação Textual', 'Compreensão de texto', 'Qual a ideia principal do texto? (texto base)', 'Tese', 'Argumento', 'Tema central', 'Conclusão', 'C', 20, 2, 'Português', 1),
+(27, 'Regência Verbal', 'Uso correto de preposições', 'Quem ____, ____ a isso', 'assiste - assiste', 'assiste - assiste', 'assiste - assiste', 'assiste - assiste', 'A', 20, 2, 'Português', 1),
+(28, 'Variação Linguística', 'Reconhecimento de diferentes registros', 'A linguagem da gíria é considerada:', 'Culta', 'Coloquial', 'Padrão', 'Técnica', 'B', 15, 1, 'Português', 1),
+(29, 'Redação Oficial', 'Características do texto formal', 'Qual NÃO é característica do texto oficial?', 'Clareza', 'Objetividade', 'Subjetividade', 'Impessoalidade', 'C', 20, 2, 'Português', 1),
+(30, 'Arcadismo', 'Escola literária do século XVIII', 'Qual é a principal característica do Arcadismo?', 'Fugere urbem', 'Carpe diem', 'Inconfidência', 'Bucolismo', 'B', 15, 2, 'Literatura', 1),
+(31, 'Romantismo no Brasil', 'Primeira geração romântica', 'Qual obra é marco do Romantismo brasileiro?', 'Iracema', 'Suspiros Poéticos', 'O Guarani', 'Dom Casmurro', 'B', 20, 2, 'Literatura', 1),
+(32, 'Realismo', 'Características do Realismo', 'Qual autor é referência do Realismo brasileiro?', 'José de Alencar', 'Machado de Assis', 'Aluísio Azevedo', 'Raul Pompeia', 'B', 20, 2, 'Literatura', 1),
+(33, 'Modernismo', 'Semana de Arte Moderna de 1922', 'Qual foi o principal evento do Modernismo brasileiro?', 'Semana de 22', 'Antropofagia', 'Pau-Brasil', 'Verdeamarelismo', 'A', 15, 1, 'Literatura', 1),
+(34, 'Literatura Contemporânea', 'Autores atuais', 'Qual destes é um escritor contemporâneo brasileiro?', 'Clarice Lispector', 'Itamar Vieira Jr.', 'João Guimarães', 'Graciliano Ramos', 'B', 15, 1, 'Literatura', 1),
+(35, 'Verbo To Be', 'Conjugação do verbo ser/estar', 'Complete: "She ___ a teacher"', 'am', 'are', 'is', 'be', 'C', 15, 1, 'Inglês', 1),
+(36, 'Simple Present', 'Presente simples em inglês', 'Qual frase está correta?', 'He go to school', 'He goes to school', 'He going to school', 'He went to school', 'B', 15, 1, 'Inglês', 1),
+(37, 'Simple Past', 'Passado simples', 'O passado de "go" é:', 'Went', 'Goed', 'Gone', 'Going', 'A', 15, 1, 'Inglês', 1),
+(38, 'Future Tense', 'Futuro em inglês', 'Qual frase expressa futuro?', 'I will travel', 'I travel', 'I traveled', 'I traveling', 'A', 15, 1, 'Inglês', 1),
+(39, 'Comparative', 'Grau comparativo', 'Complete: "John is ___ than Peter"', 'tall', 'taller', 'the tallest', 'more tall', 'B', 15, 1, 'Inglês', 1),
+(40, 'Verbo Ser', 'Conjugação em espanhol', 'Complete: "Yo ___ estudiante"', 'soy', 'eres', 'es', 'somos', 'A', 15, 1, 'Português', 1),
+(41, 'Falsos Cognatos', 'Palavras com significado diferente', 'Em espanhol, "embarazada" significa:', 'Envergonhada', 'Grávida', 'Embaraçada', 'Atrapalhada', 'B', 20, 2, 'Inglês', 1),
+(42, 'Pretérito Perfeito', 'Passado em espanhol', 'Complete: "Ayer yo ___ comer"', 'fue', 'fui', 'iba', 'voy', 'B', 15, 1, 'Português', 1),
+(43, 'Vocabulário', 'Palavras do cotidiano', 'Como se diz "criança" em espanhol?', 'Niño', 'Chico', 'Muchacho', 'Pibe', 'A', 10, 1, 'Inglês', 1),
+(44, 'Artes Visuais', 'Movimentos artísticos', 'Qual artista é conhecido como pai do Cubismo?', 'Van Gogh', 'Picasso', 'Monet', 'Da Vinci', 'B', 15, 1, 'Artes', 1),
+(45, 'Música Brasileira', 'Gêneros musicais', 'Qual ritmo é originário da Bahia?', 'Samba', 'Forró', 'Axé', 'Frevo', 'C', 15, 1, 'Artes', 1),
+(46, 'Teatro', 'Elementos teatrais', 'O que é "quarta parede"?', 'Cenário', 'Ilusão de realidade', 'Plateia', 'Coquetel', 'B', 20, 2, 'Artes', 1),
+(47, 'Dança', 'Danças folclóricas', 'Qual é uma dança típica do Norte do Brasil?', 'Samba', 'Carimbó', 'Fandango', 'Xaxado', 'B', 15, 1, 'Artes', 1),
+(48, 'Esportes', 'Modalidades olímpicas', 'Qual destes é um esporte olímpico?', 'Xadrez', 'Judô', 'Poker', 'Surfe', 'B', 15, 1, 'Educação Física', 1),
+(49, 'Regras do Futebol', 'Conhecimento básico', 'Quantos jogadores tem um time de futebol em campo?', '10', '11', '12', '13', 'B', 10, 1, 'Educação Física', 1),
+(50, 'Corpo Humano', 'Sistemas do corpo na atividade física', 'Qual sistema é mais ativado durante a corrida?', 'Respiratório', 'Digestório', 'Nervoso', 'Endócrino', 'A', 15, 1, 'Biologia', 1),
+(51, 'História do Esporte', 'Origem das modalidades', 'Onde surgiram os Jogos Olímpicos?', 'Roma', 'Egito', 'Grécia', 'Persia', 'C', 15, 1, 'Educação Física', 1),
+(52, 'Operações Básicas', 'Soma e subtração', 'Quanto é 15 + 27 - 10?', '30', '32', '34', '36', 'B', 10, 1, 'Matemática', 2),
+(53, 'Multiplicação', 'Tabuada e multiplicação', 'Quanto é 12 × 8?', '86', '96', '106', '88', 'B', 15, 1, 'Matemática', 2),
+(54, 'Divisão', 'Divisão exata e com resto', 'Quanto é 144 ÷ 12?', '10', '11', '12', '13', 'C', 15, 1, 'Matemática', 2),
+(55, 'Frações', 'Operações com frações', 'Quanto é 1/2 + 1/4?', '1/6', '2/6', '3/4', '1/2', 'C', 20, 2, 'Matemática', 2),
+(56, 'Porcentagem', 'Cálculo de porcentagem', 'Quanto é 20% de 200?', '20', '30', '40', '50', 'C', 15, 1, 'Matemática', 2),
+(57, 'Equações', 'Equações de primeiro grau', 'Se x + 5 = 12, qual o valor de x?', '5', '6', '7', '8', 'C', 20, 2, 'Matemática', 2),
+(58, 'Geometria', 'Área de figuras planas', 'Qual a área de um quadrado de lado 5 cm?', '10 cm²', '15 cm²', '20 cm²', '25 cm²', 'D', 20, 2, 'Matemática', 2),
+(59, 'Regra de Três', 'Proporcionalidade', 'Se 2 maçãs custam R$ 4,00, quanto custam 5 maçãs?', 'R$ 8,00', 'R$ 10,00', 'R$ 12,00', 'R$ 14,00', 'B', 20, 2, 'Matemática', 2),
+(60, 'Expressões', 'Expressões numéricas', 'Quanto é (8 + 4) × 3?', '24', '36', '26', '38', 'B', 15, 1, 'Matemática', 2),
+(61, 'Potenciação', 'Potências e expoentes', 'Quanto é 2³?', '4', '6', '8', '10', 'C', 15, 1, 'Matemática', 2),
+(62, 'Razão e Proporção', 'Conceitos fundamentais', 'Qual a razão entre 10 e 20?', '1:1', '1:2', '2:1', '3:1', 'B', 15, 1, 'Matemática', 2),
+(63, 'Média Aritmética', 'Cálculo de média', 'Qual a média de 7, 8 e 9?', '7', '8', '9', '10', 'B', 15, 1, 'Matemática', 2),
+(64, 'Funções', 'Conceito de função', 'Uma função f(x) = 2x + 3, qual o valor de f(2)?', '5', '6', '7', '8', 'C', 20, 2, 'Matemática', 2),
+(65, 'Geometria Plana', 'Propriedades dos polígonos', 'Quantos graus tem a soma dos ângulos internos de um triângulo?', '90°', '180°', '270°', '360°', 'B', 20, 2, 'Matemática', 2),
+(66, 'Geometria Espacial', 'Volume de sólidos', 'Qual a fórmula do volume do cubo?', 'l²', 'l³', '6l²', '2l', 'B', 20, 2, 'Matemática', 2),
+(67, 'Trigonometria', 'Seno, cosseno e tangente', 'Qual o valor do seno de 30°?', '0', '1/2', '√2/2', '√3/2', 'B', 25, 3, 'Matemática', 2),
+(68, 'Probabilidade', 'Cálculo de probabilidade', 'Qual a probabilidade de sair cara em uma moeda?', '1/4', '1/3', '1/2', '1', 'C', 20, 2, 'Matemática', 2),
+(69, 'Logaritmo', 'Propriedades logarítmicas', 'O log de 100 na base 10 é:', '1', '2', '10', '100', 'B', 25, 3, 'Matemática', 2),
+(70, 'Matemática Financeira', 'Juros simples e compostos', 'Qual a fórmula de juros simples?', 'C×i×t', 'C×(1+i)^t', 'C×i/t', 'C/t×i', 'A', 25, 3, 'Matemática', 2),
+(71, 'Estatística', 'Medidas de tendência central', 'Qual é a medida que divide os dados ao meio?', 'Média', 'Moda', 'Mediana', 'Variância', 'C', 20, 2, 'Matemática', 2),
+(72, 'Sistema Solar', 'Planetas e suas características', 'Qual é o planeta mais próximo do Sol?', 'Vênus', 'Marte', 'Mercúrio', 'Terra', 'C', 15, 1, 'Ciências da Natureza', 3),
+(74, 'Animais', 'Classificação dos animais', 'Qual destes é um mamífero?', 'Pinguim', 'Jacaré', 'Morcego', 'Salamandra', 'C', 15, 1, 'Biologia', 3),
+(75, 'Plantas', 'Fotossíntese e respiração', 'O que as plantas produzem na fotossíntese?', 'Gás Carbônico', 'Oxigênio', 'Nitrogênio', 'Hidrogênio', 'B', 20, 2, 'Biologia', 3),
+(76, 'Cadeia Alimentar', 'Produtores e consumidores', 'Quem são os produtores na cadeia alimentar?', 'Animais', 'Fungos', 'Plantas', 'Bactérias', 'C', 15, 1, 'Biologia', 3),
+(77, 'Água', 'Ciclo da água e propriedades', 'Qual é o ponto de ebulição da água?', '0°C', '50°C', '100°C', '200°C', 'C', 15, 1, 'Biologia', 3),
+(78, 'Solo', 'Formação e composição', 'O que é húmus?', 'Tipo de solo', 'Matéria orgânica', 'Rocha', 'Mineral', 'B', 15, 1, 'Biologia', 3),
+(79, 'Recursos Naturais', 'Renováveis e não renováveis', 'Qual destes é um recurso renovável?', 'Petróleo', 'Carvão', 'Energia solar', 'Gás natural', 'C', 15, 1, 'Biologia', 3),
+(80, 'Célula', 'Estrutura celular', 'Qual organela é responsável pela respiração celular?', 'Núcleo', 'Mitocôndria', 'Ribossomo', 'Complexo de Golgi', 'B', 20, 2, 'Biologia', 3),
+(81, 'Genética', 'Leis de Mendel', 'Qual a proporção fenotípica em um cruzamento Aa x Aa?', '1:1', '3:1', '1:2:1', '9:3:3:1', 'B', 25, 3, 'Biologia', 3),
+(82, 'Evolução', 'Teoria da evolução das espécies', 'Quem propôs a teoria da evolução por seleção natural?', 'Lamarck', 'Darwin', 'Mendel', 'Watson', 'B', 20, 2, 'Biologia', 3),
+(83, 'Ecologia', 'Relações ecológicas', 'O que é mutualismo?', 'Relação prejudicial', 'Relação benéfica para ambos', 'Parasitismo', 'Competição', 'B', 20, 2, 'Biologia', 3),
+(84, 'Reinos', 'Classificação dos seres vivos', 'Em qual reino estão as bactérias?', 'Fungi', 'Protista', 'Monera', 'Animalia', 'C', 20, 2, 'Biologia', 3),
+(85, 'Fisiologia', 'Funcionamento do corpo', 'Qual hormônio regula o açúcar no sangue?', 'Adrenalina', 'Insulina', 'Estrogênio', 'Testosterona', 'B', 20, 2, 'Biologia', 3),
+(86, 'Botânica', 'Partes das plantas', 'Qual a função da raiz?', 'Fotossíntese', 'Absorção de água', 'Reprodução', 'Respiração', 'B', 15, 1, 'Biologia', 3),
+(87, 'Zoologia', 'Classificação animal', 'Qual a classe dos sapos e rãs?', 'Reptilia', 'Aves', 'Mammalia', 'Anfibia', 'D', 20, 2, 'Biologia', 3),
+(88, 'Mecânica', 'Leis de Newton', 'Primeira lei de Newton é conhecida como:', 'Lei da Ação e Reação', 'Lei da Inércia', 'Lei da Gravidade', 'Lei da Aceleração', 'B', 20, 2, 'Física', 3),
+(89, 'Energia', 'Tipos e transformações', 'Qual é a unidade de medida de energia?', 'Watt', 'Joule', 'Newton', 'Volt', 'B', 20, 2, 'Física', 3),
+(90, 'Termologia', 'Calor e temperatura', 'O que mede o termômetro?', 'Calor', 'Temperatura', 'Energia', 'Pressão', 'B', 15, 1, 'Física', 3),
+(91, 'Óptica', 'Estudo da luz', 'Qual é o fenômeno da luz que ocorre no arco-íris?', 'Reflexão', 'Refração', 'Difração', 'Absorção', 'B', 20, 2, 'Física', 3),
+(92, 'Eletricidade', 'Circuitos elétricos', 'Qual a unidade de medida da resistência elétrica?', 'Volt', 'Ampère', 'Ohm', 'Watt', 'C', 20, 2, 'Física', 3),
+(93, 'Ondulatória', 'Propriedades das ondas', 'Qual a unidade de frequência?', 'Metro', 'Segundo', 'Hertz', 'Joule', 'C', 20, 2, 'Física', 3),
+(94, 'Cinética', 'Movimento uniforme', 'Qual a fórmula da velocidade média?', 'v = Δs × Δt', 'v = Δs/Δt', 'v = Δt/Δs', 'v = Δs + Δt', 'B', 20, 2, 'Química', 3),
+(95, 'Hidrostática', 'Pressão em fluidos', 'Quem descobriu o Princípio de Pascal?', 'Arquimedes', 'Pascal', 'Stevin', 'Torricelli', 'B', 25, 3, 'Física', 3),
+(96, 'Tabela Periódica', 'Organização dos elementos', 'Qual o símbolo do elemento Ouro?', 'Au', 'Ag', 'Fe', 'Cu', 'A', 20, 2, 'Química', 3),
+(97, 'Ligações Químicas', 'Tipos de ligação', 'A ligação entre sódio e cloro (NaCl) é:', 'Covalente', 'Iônica', 'Metálica', 'Van der Waals', 'B', 20, 2, 'Química', 3),
+(98, 'Funções Químicas', 'Ácidos e bases', 'O que a escala pH mede?', 'Temperatura', 'Acidez', 'Pressão', 'Volume', 'B', 15, 1, 'Química', 3),
+(99, 'Estequiometria', 'Cálculos químicos', 'Quantos mols tem 18g de água (H2O)?', '0,5 mol', '1 mol', '2 mols', '3 mols', 'B', 25, 3, 'Química', 3),
+(100, 'Química Orgânica', 'Compostos de carbono', 'Qual é a função orgânica do álcool?', 'OH', 'COOH', 'CHO', 'NH2', 'A', 20, 2, 'Química', 3),
+(101, 'Eletroquímica', 'Pilhas e baterias', 'O que ocorre no ânodo?', 'Redução', 'Oxidação', 'Neutralização', 'Precipitação', 'B', 25, 3, 'Química', 3),
+(102, 'Cinética Química', 'Velocidade das reações', 'O que um catalisador faz?', 'Aumenta a energia', 'Diminui o tempo', 'Altera o produto', 'Consome reagente', 'B', 20, 2, 'Química', 3),
+(103, 'Termoquímica', 'Reações endotérmicas', 'Uma reação que absorve calor é chamada:', 'Exotérmica', 'Endotérmica', 'Isotérmica', 'Adiabática', 'B', 20, 2, 'Química', 3),
+(104, 'Descobrimento do Brasil', 'Chegada dos portugueses', 'Em que ano o Brasil foi descoberto?', '1500', '1492', '1530', '1600', 'A', 15, 1, 'História', 4),
+(105, 'Brasil Colônia', 'Período colonial', 'Qual foi o primeiro cultivo econômico do Brasil?', 'Café', 'Algodão', 'Cana-de-açúcar', 'Ouro', 'C', 15, 1, 'História', 4),
+(106, 'Independência', 'Processo de independência', 'Em que ano ocorreu a Independência do Brasil?', '1822', '1889', '1500', '1824', 'A', 15, 1, 'História', 4),
+(107, 'República', 'Proclamação da República', 'Quem proclamou a República no Brasil?', 'Dom Pedro I', 'Dom Pedro II', 'Getúlio Vargas', 'Deodoro da Fonseca', 'D', 15, 1, 'História', 4),
+(108, 'Era Vargas', 'Governo Getúlio Vargas', 'Qual foi o período do Estado Novo?', '1930-1934', '1934-1937', '1937-1945', '1945-1951', 'C', 20, 2, 'História', 4),
+(109, 'Ditadura Militar', 'Regime militar no Brasil', 'Em que ano começou a ditadura militar no Brasil?', '1960', '1964', '1968', '1970', 'B', 20, 2, 'História', 4),
+(110, 'Brasil Império', 'Primeiro Reinado', 'Quem foi o primeiro imperador do Brasil?', 'Dom Pedro II', 'Dom João VI', 'Dom Pedro I', 'Princesa Isabel', 'C', 15, 1, 'História', 4),
+(111, 'Revolução Industrial', 'Transformações econômicas', 'Em qual país começou a Revolução Industrial?', 'França', 'Alemanha', 'Inglaterra', 'EUA', 'C', 20, 2, 'História', 4),
+(112, 'Idade Média', 'Período medieval', 'O que foram as Cruzadas?', 'Guerras santas', 'Revoluções', 'Invasões', 'Pragas', 'A', 20, 2, 'História', 4),
+(113, 'Grécia Antiga', 'Civilização grega', 'Qual era a principal cidade-Estado da Grécia?', 'Atenas', 'Esparta', 'Corinto', 'Tebas', 'A', 15, 1, 'História', 4),
+(114, 'Roma Antiga', 'Império Romano', 'Qual foi o idioma oficial do Império Romano?', 'Grego', 'Latim', 'Etrusco', 'Italiano', 'B', 15, 1, 'História', 4),
+(115, 'Primeira Guerra', 'Conflito mundial 1914-1918', 'Qual foi a causa imediata da 1ª Guerra?', 'Nacionalismo', 'Pactos secretos', 'Assassinato de Francisco Ferdinando', 'Corrida armamentista', 'C', 20, 2, 'História', 4),
+(116, 'Segunda Guerra', 'Conflito mundial 1939-1945', 'Quem era o líder da Alemanha nazista?', 'Mussolini', 'Hitler', 'Stalin', 'Roosevelt', 'B', 20, 2, 'História', 4),
+(117, 'Regiões do Brasil', 'Divisão regional', 'Quantas regiões existem no Brasil?', '3', '4', '5', '6', 'C', 15, 1, 'Geografia', 4),
+(118, 'Climas do Brasil', 'Tipos climáticos', 'Qual o clima predominante no Nordeste?', 'Equatorial', 'Tropical', 'Semiárido', 'Subtropical', 'C', 15, 1, 'Geografia', 4),
+(119, 'Hidrografia', 'Rios brasileiros', 'Qual é o maior rio do Brasil?', 'São Francisco', 'Tocantins', 'Amazonas', 'Paraná', 'C', 15, 1, 'Geografia', 4),
+(120, 'Cartografia', 'Mapas e coordenadas', 'O que a Linha do Equador divide?', 'Leste e Oeste', 'Norte e Sul', 'Dia e Noite', 'Climas', 'B', 15, 1, 'Geografia', 4),
+(121, 'Urbanização', 'Crescimento das cidades', 'O que é megalópole?', 'Cidade grande', 'Região metropolitana', 'Conurbação de metrópoles', 'Capital', 'C', 20, 2, 'Geografia', 4),
+(122, 'Globalização', 'Integração mundial', 'Qual é uma característica da globalização?', 'Isolamento', 'Protecionismo', 'Interdependência', 'Regionalismo', 'C', 20, 2, 'Geografia', 4),
+(123, 'Geopolítica', 'Relações internacionais', 'O que é a OTAN?', 'Aliança militar', 'Acordo comercial', 'Organização cultural', 'Tratado ambiental', 'A', 20, 2, 'Geografia', 4),
+(124, 'Demografia', 'População mundial', 'Qual país tem a maior população do mundo?', 'EUA', 'Índia', 'China', 'Indonésia', 'C', 20, 2, 'Geografia', 4),
+(125, 'Filosofia Antiga', 'Período clássico', 'Quem foi o mestre de Platão?', 'Aristóteles', 'Sócrates', 'Pitágoras', 'Tales', 'B', 20, 2, 'Filosofia', 4),
+(126, 'Ética', 'Estudo da moral', 'O que significa "ética"?', 'Costume', 'Caráter', 'Moral', 'Virtude', 'A', 15, 1, 'Filosofia', 4),
+(127, 'Política', 'Filosofia política', 'Quem escreveu "A República"?', 'Aristóteles', 'Sócrates', 'Platão', 'Maquiavel', 'C', 20, 2, 'Sociologia', 4),
+(128, 'Existencialismo', 'Filosofia contemporânea', 'Qual filósofo é referência do existencialismo?', 'Nietzsche', 'Kant', 'Sartre', 'Descartes', 'C', 20, 2, 'Filosofia', 4),
+(129, 'Iluminismo', 'Século das Luzes', 'Quem foi um dos principais iluministas?', 'Voltaire', 'Platão', 'Sócrates', 'Agostinho', 'A', 20, 2, 'Filosofia', 4),
+(130, 'Cultura', 'Conceitos sociológicos', 'O que é cultura?', 'Arte erudita', 'Conjunto de costumes', 'Música popular', 'Tradição religiosa', 'B', 15, 1, 'Sociologia', 4),
+(131, 'Desigualdade Social', 'Estratificação', 'O que é mobilidade social?', 'Mudança de classe', 'Riqueza', 'Educação', 'Trabalho', 'A', 20, 2, 'Sociologia', 4),
+(132, 'Trabalho', 'Sociologia do trabalho', 'Quem é o autor do "Manifesto Comunista"?', 'Durkheim', 'Weber', 'Marx', 'Comte', 'C', 20, 2, 'Sociologia', 4),
+(133, 'Família', 'Instituição social', 'O que é família monoparental?', 'Vários filhos', 'Pais divorciados', 'Um dos pais', 'Avós', 'C', 15, 1, 'Sociologia', 4),
+(134, 'Educação', 'Sociologia da educação', 'Qual sociólogo estudou a função social da escola?', 'Marx', 'Weber', 'Durkheim', 'Bourdieu', 'C', 20, 2, 'Sociologia', 4),
+(135, 'Autoconhecimento', 'Conhecendo a si mesmo', 'O que é autoconhecimento?', 'Saber sobre os outros', 'Conhecer a si próprio', 'Estudar filosofia', 'Praticar esportes', 'B', 15, 1, 'Projeto de Vida & Tecnologia', 5),
+(136, 'Inteligência Emocional', 'Controle das emoções', 'Quais os 4 pilares da inteligência emocional?', 'Ver, ouvir, falar, sentir', 'Conhecer, controlar, motivar, relacionar', 'Raciocinar, calcular, escrever, ler', 'Correr, pular, nadar, andar', 'B', 20, 2, 'Projeto de Vida & Tecnologia', 5),
+(137, 'Planejamento de Carreira', 'Escolhas profissionais', 'O que é um plano de carreira?', 'Lista de empregos', 'Trajetória profissional planejada', 'Currículo atualizado', 'Cargo desejado', 'B', 15, 1, 'Projeto de Vida & Tecnologia', 5),
+(138, 'Orçamento Pessoal', 'Controle financeiro', 'O que é um orçamento doméstico?', 'Lista de compras', 'Controle de receitas e despesas', 'Plano de investimentos', 'Declaração de imposto', 'B', 15, 1, 'Projeto de Vida & Tecnologia', 5),
+(139, 'Juros Compostos', 'Matemática financeira', 'O que são juros compostos?', 'Juros sobre juros', 'Taxa fixa', 'Desconto', 'Multa', 'A', 20, 2, 'Projeto de Vida & Tecnologia', 5),
+(140, 'Investimentos', 'Tipos de aplicação', 'O que é a poupança?', 'Investimento em ações', 'Caderneta de poupança', 'Fundo de renda fixa', 'Previdência privada', 'B', 15, 1, 'Projeto de Vida & Tecnologia', 5),
+(141, 'Inteligência Artificial', 'Conceitos de IA', 'O que é Machine Learning?', 'Robôs físicos', 'Aprendizado de máquina', 'Computação em nuvem', 'Redes sociais', 'B', 20, 2, 'Projeto de Vida & Tecnologia', 5),
+(142, 'Segurança Digital', 'Proteção de dados', 'O que é um antivírus?', 'Programa malicioso', 'Software de proteção', 'Navegador web', 'Sistema operacional', 'B', 15, 1, 'Projeto de Vida & Tecnologia', 5),
+(143, 'Programação', 'Conceitos básicos', 'O que é um algoritmo?', 'Linguagem de programação', 'Sequência de passos', 'Computador', 'Software', 'B', 20, 2, 'Projeto de Vida & Tecnologia', 5);

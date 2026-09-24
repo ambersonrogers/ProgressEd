@@ -74,47 +74,358 @@ const BNCC_AREAS = [
 const LEVEL_XP = 500;
 
 // --------------------------------------------------------------------------
-// INFERÊNCIA INTELIGENTE DE DISCIPLINAS DO BANCO DE DADOS
+// ETAPAS DINÂMICAS DA TRILHA DUOLINGO POR DISCIPLINA (BNCC INTEGRAL)
 // --------------------------------------------------------------------------
-function inferSubject(raw) {
-  if (raw.subject && typeof raw.subject === 'string' && raw.subject.trim() !== '') {
-    const s = raw.subject.toLowerCase();
-    if (s.includes('portugu') || s.includes('lingua') || s.includes('literat') || s.includes('ingl') || s.includes('arte')) return 'Linguagens';
-    if (s.includes('matem') || s.includes('algeb') || s.includes('geometr')) return 'Matemática';
-    if (s.includes('físic') || s.includes('fisic') || s.includes('químic') || s.includes('quimic') || s.includes('biolog')) return 'Ciências da Natureza';
-    if (s.includes('histór') || s.includes('histor') || s.includes('geograf') || s.includes('filosof') || s.includes('sociol')) return 'Ciências Humanas';
-    return raw.subject;
-  }
+const BNCC_TRAIL_STAGES = {
+  linguagens: [
+    {
+      id: 1,
+      title: 'Gramática & Ortografia',
+      subtitle: 'Acentuação, Crase e Regência Verbal',
+      icon: '✍️',
+      keywords: ['ortografia', 'acentuação', 'crase', 'concordância', 'regência', 'gramática', 'verbo', 'português'],
+      type: 'challenge'
+    },
+    {
+      id: 2,
+      title: 'Interpretação & Gêneros',
+      subtitle: 'Gêneros Textuais, Coesão e Variação Linguística',
+      icon: '📖',
+      keywords: ['interpretação', 'gênero', 'variação', 'figura', 'leitura', 'texto'],
+      type: 'challenge'
+    },
+    {
+      id: 3,
+      title: 'Literatura Brasileira',
+      subtitle: 'Romantismo, Realismo, Modernismo e Contemporânea',
+      icon: '📚',
+      keywords: ['literatura', 'romantismo', 'realismo', 'modernismo', 'arcadismo', 'poema', 'autor'],
+      type: 'challenge'
+    },
+    {
+      id: 4,
+      title: 'Língua Inglesa',
+      subtitle: 'Tempos Verbais, Vocabulário e Falsos Cognatos',
+      icon: '🇬🇧',
+      keywords: ['inglês', 'english', 'present', 'past', 'future', 'comparative', 'verb', 'translation'],
+      type: 'challenge'
+    },
+    {
+      id: 5,
+      title: 'Artes & Expressão Cultural',
+      subtitle: 'Artes Visuais, Teatro, Música e Dança',
+      icon: '🎨',
+      keywords: ['artes', 'música', 'teatro', 'dança', 'esporte', 'futebol', 'cultura'],
+      type: 'challenge'
+    },
+    {
+      id: 6,
+      title: 'Baú de Linguagens',
+      subtitle: 'Recompensa Bônus: Dicas de Redação Nota 1000 ENEM',
+      icon: '🎁',
+      type: 'chest',
+      bonusXp: 100
+    },
+    {
+      id: 7,
+      title: 'Redação & Argumentação',
+      subtitle: 'Estrutura Dissertativa e Norma Culta ENEM',
+      icon: '📝',
+      keywords: ['redação', 'oficial', 'texto', 'dissertativo', 'argumentação'],
+      type: 'challenge'
+    },
+    {
+      id: 8,
+      title: 'Desafio Mestre de Linguagens',
+      subtitle: 'Avaliação Integradora de Competências',
+      icon: '🏆',
+      type: 'boss'
+    }
+  ],
 
-  const text = `${raw.title || ''} ${raw.question || ''} ${raw.description || ''}`.toLowerCase();
-  if (text.match(/ortografia|concordância|verbo|poema|texto|leitura|discurso|gramática|figura de linguagem|palavra/)) {
-    return 'Linguagens';
-  }
-  if (text.match(/porcentagem|equação|função|f\(x\)|matriz|cálculo|geometria|triângulo|número|probabilidade/)) {
-    return 'Matemática';
-  }
-  if (text.match(/newton|velocidade|força|energia|átomo|reação|química|ph|biologia|célula|dna|genética|física/)) {
-    return 'Ciências da Natureza';
-  }
-  if (text.match(/guerra|revolução|século|história|brasil|geografia|relevo|clima|filosofia|ética|sociologia|cidadania/)) {
-    return 'Ciências Humanas';
-  }
+  matematica: [
+    {
+      id: 1,
+      title: 'Operações & Aritmética',
+      subtitle: 'Frações, Potenciação e Expressões Numéricas',
+      icon: '🔢',
+      keywords: ['operações', 'divisão', 'multiplicação', 'frações', 'expressões', 'potenciação', 'raiz'],
+      type: 'challenge'
+    },
+    {
+      id: 2,
+      title: 'Álgebra & Equações',
+      subtitle: 'Equações de 1º e 2º Grau e Regra de Três',
+      icon: '📐',
+      keywords: ['equações', 'regra de três', 'razão', 'proporção', 'álgebra', 'x²'],
+      type: 'challenge'
+    },
+    {
+      id: 3,
+      title: 'Porcentagem & Finanças',
+      subtitle: 'Matemática Financeira, Juros e Descontos',
+      icon: '💰',
+      keywords: ['porcentagem', 'financeira', 'juros', 'desconto'],
+      type: 'challenge'
+    },
+    {
+      id: 4,
+      title: 'Geometria Plana & Espacial',
+      subtitle: 'Áreas, Perímetros, Triângulos e Sólidos',
+      icon: '📏',
+      keywords: ['geometria', 'plana', 'espacial', 'área', 'perímetro', 'círculo'],
+      type: 'challenge'
+    },
+    {
+      id: 5,
+      title: 'Funções & Trigonometria',
+      subtitle: 'Função Afim, Quadrática, Seno, Cosseno e Logaritmos',
+      icon: '📈',
+      keywords: ['funções', 'trigonometria', 'logaritmo', 'seno', 'limite', 'derivada'],
+      type: 'challenge'
+    },
+    {
+      id: 6,
+      title: 'Baú Matemático',
+      subtitle: 'Recompensa Bônus: Fórmulas e Macetes de Raciocínio Rápido',
+      icon: '🎁',
+      type: 'chest',
+      bonusXp: 100
+    },
+    {
+      id: 7,
+      title: 'Estatística & Probabilidade',
+      subtitle: 'Média Aritmética, Mediana, Moda e Probabilidade',
+      icon: '🎲',
+      keywords: ['estatística', 'probabilidade', 'média', 'gráfico'],
+      type: 'challenge'
+    },
+    {
+      id: 8,
+      title: 'Desafio Mestre de Matemática',
+      subtitle: 'Grandes Problemas e Raciocínio Lógico Avançado',
+      icon: '🏆',
+      type: 'boss'
+    }
+  ],
 
-  // Fallback por moduleId
-  const mod = Number(raw.module_id || raw.moduleId || 1);
-  if (mod === 1) return 'Linguagens';
-  if (mod === 2) return 'Matemática';
-  if (mod === 3) return 'Ciências da Natureza';
-  if (mod === 4) return 'Ciências Humanas';
-  return 'Linguagens';
-}
+  natureza: [
+    {
+      id: 1,
+      title: 'Física: Mecânica & Newton',
+      subtitle: 'Velocidade, Força, Gravidade e Leis de Newton',
+      icon: '⚡',
+      keywords: ['newton', 'velocidade', 'força', 'gravidade', 'mecânica', 'cinética'],
+      type: 'challenge'
+    },
+    {
+      id: 2,
+      title: 'Física: Energia & Circuitos',
+      subtitle: 'Trabalho, Potência, Calor, Óptica e Lei de Ohm',
+      icon: '💡',
+      keywords: ['energia', 'trabalho', 'ohm', 'eletricidade', 'óptica', 'ondulatória', 'termologia'],
+      type: 'challenge'
+    },
+    {
+      id: 3,
+      title: 'Química: Átomos & Tabela',
+      subtitle: 'Estrutura Atômica, Tabela Periódica e Ligações',
+      icon: '🧪',
+      keywords: ['átomo', 'tabela periódica', 'oxigênio', 'carbono', 'ligações', 'hidrogênio'],
+      type: 'challenge'
+    },
+    {
+      id: 4,
+      title: 'Química: Reações & pH',
+      subtitle: 'Funções Químicas, Ácidos, Bases, Estequiometria e Soluções',
+      icon: '⚗️',
+      keywords: ['ácido', 'ph', 'reação', 'massa molar', 'estequiometria', 'termoquímica', 'química'],
+      type: 'challenge'
+    },
+    {
+      id: 5,
+      title: 'Biologia: Célula & Genética',
+      subtitle: 'Citologia, DNA, Mitocôndria, Mitose e Hereditariedade',
+      icon: '🧬',
+      keywords: ['célula', 'dna', 'mitocôndria', 'genética', 'divisão celular', 'mitose', 'biologia'],
+      type: 'challenge'
+    },
+    {
+      id: 6,
+      title: 'Baú da Natureza',
+      subtitle: 'Recompensa Bônus: Guia de Métodos Científicos e Fisiologia',
+      icon: '🎁',
+      type: 'chest',
+      bonusXp: 100
+    },
+    {
+      id: 7,
+      title: 'Biologia: Ecologia & Evolução',
+      subtitle: 'Ecossistemas, Cadeia Alimentar, Biodiversidade e Darwin',
+      icon: '🌿',
+      keywords: ['ecologia', 'ecossistema', 'evolução', 'biodiversidade', 'fotossíntese', 'cadeia alimentar'],
+      type: 'challenge'
+    },
+    {
+      id: 8,
+      title: 'Desafio Mestre da Natureza',
+      subtitle: 'Integração Física-Química-Biologia no Mundo Real',
+      icon: '🏆',
+      type: 'boss'
+    }
+  ],
 
+  humanas: [
+    {
+      id: 1,
+      title: 'História do Brasil',
+      subtitle: 'Brasil Colônia, Império e Formação da Nação',
+      icon: '👑',
+      keywords: ['colônia', 'império', 'descobrimento', 'independência', 'brasil'],
+      type: 'challenge'
+    },
+    {
+      id: 2,
+      title: 'República & Brasil Moderno',
+      subtitle: 'República Velha, Era Vargas e Ditadura Militar',
+      icon: '🏛️',
+      keywords: ['república', 'vargas', 'ditadura', 'militar', 'revolução'],
+      type: 'challenge'
+    },
+    {
+      id: 3,
+      title: 'História Geral & Guerras',
+      subtitle: 'Grécia, Roma, Idade Média, Revolução Industrial e Guerras Mundiais',
+      icon: '⚔️',
+      keywords: ['grécia', 'roma', 'idade média', 'revolução industrial', 'guerra', 'francesa'],
+      type: 'challenge'
+    },
+    {
+      id: 4,
+      title: 'Geografia do Brasil',
+      subtitle: 'Climas, Relevo, Hidrografia, Biomas e Regiões',
+      icon: '🗺️',
+      keywords: ['clima', 'hidrografia', 'regiões', 'cartografia', 'continente'],
+      type: 'challenge'
+    },
+    {
+      id: 5,
+      title: 'Geografia Humana & Global',
+      subtitle: 'Urbanização, Demografia, Geopolítica e Globalização',
+      icon: '🏙️',
+      keywords: ['urbanização', 'demografia', 'geopolítica', 'globalização', 'população'],
+      type: 'challenge'
+    },
+    {
+      id: 6,
+      title: 'Baú de Humanidades',
+      subtitle: 'Recompensa Bônus: Atlas Histórico & Repertório Sociocultural',
+      icon: '🎁',
+      type: 'chest',
+      bonusXp: 100
+    },
+    {
+      id: 7,
+      title: 'Filosofia & Sociologia',
+      subtitle: 'Ética, Iluminismo, Cidadania, Cultura e Estrutura Social',
+      icon: '🤔',
+      keywords: ['filosofia', 'ética', 'iluminismo', 'existencialismo', 'cultura', 'sociologia', 'família', 'desigualdade', 'trabalho'],
+      type: 'challenge'
+    },
+    {
+      id: 8,
+      title: 'Desafio Mestre de Humanas',
+      subtitle: 'Sociedade, Cidadania e Análise Crítica Contemporânea',
+      icon: '🏆',
+      type: 'boss'
+    }
+  ],
+
+  simulado: [
+    {
+      id: 1,
+      title: 'Módulo 1: Linguagens ENEM',
+      subtitle: 'Interpretação e Competências de Linguagens',
+      icon: '📝',
+      keywords: ['linguagens', 'português', 'literatura', 'inglês', 'artes'],
+      type: 'challenge'
+    },
+    {
+      id: 2,
+      title: 'Módulo 2: Ciências Humanas ENEM',
+      subtitle: 'História, Geografia, Filosofia e Sociologia',
+      icon: '📜',
+      keywords: ['humanas', 'história', 'geografia', 'filosofia', 'sociologia'],
+      type: 'challenge'
+    },
+    {
+      id: 3,
+      title: 'Módulo 3: Ciências da Natureza ENEM',
+      subtitle: 'Física, Química e Biologia Aplicadas',
+      icon: '🧪',
+      keywords: ['natureza', 'física', 'química', 'biologia'],
+      type: 'challenge'
+    },
+    {
+      id: 4,
+      title: 'Módulo 4: Matemática ENEM',
+      subtitle: 'Álgebra, Geometria e Raciocínio Quantitativo',
+      icon: '📐',
+      keywords: ['matemática', 'álgebra', 'geometria', 'cálculo', 'estatística'],
+      type: 'challenge'
+    },
+    {
+      id: 5,
+      title: 'Baú Estratégico ENEM',
+      subtitle: 'Recompensa Bônus: Guia de Gestão de Tempo e TRI',
+      icon: '🎁',
+      type: 'chest',
+      bonusXp: 150
+    },
+    {
+      id: 6,
+      title: 'Grande Simulado Geral ENEM',
+      subtitle: '10 Questões Integradas • Pontuação Simulada 0 a 1000',
+      icon: '🎯',
+      type: 'boss'
+    }
+  ]
+};
+
+// --------------------------------------------------------------------------
+// NORMALIZAÇÃO DE DESAFIOS CARREGADOS DO BANCO DE DADOS
+// --------------------------------------------------------------------------
 function normalizeChallenge(c) {
-  const subject = inferSubject(c);
+  const rawSub = (c.subject || '').trim();
+  let subject = rawSub;
+  if (!subject) {
+    const mod = Number(c.module_id || c.moduleId || 1);
+    if (mod === 1) subject = 'Português';
+    else if (mod === 2) subject = 'Matemática';
+    else if (mod === 3) subject = 'Ciências da Natureza';
+    else if (mod === 4) subject = 'Ciências Humanas';
+    else subject = 'Geral';
+  }
+
+  // Mapeia para grande área BNCC
+  let areaKey = 'linguagens';
+  if (['Português', 'Literatura', 'Inglês', 'Artes', 'Educação Física', 'Linguagens'].includes(subject)) {
+    areaKey = 'linguagens';
+  } else if (subject === 'Matemática') {
+    areaKey = 'matematica';
+  } else if (['Física', 'Química', 'Biologia', 'Ciências da Natureza'].includes(subject)) {
+    areaKey = 'natureza';
+  } else if (['História', 'Geografia', 'Filosofia', 'Sociologia', 'Ciências Humanas'].includes(subject)) {
+    areaKey = 'humanas';
+  } else {
+    areaKey = 'simulado';
+  }
+
   return {
     id: c.id,
     moduleId: Number(c.moduleId || c.module_id || 1),
     subject,
+    areaKey,
     title: c.title || `${subject} #${c.id}`,
     question: c.question || c.text || '',
     optionA: c.optionA ?? c.option_a ?? '',
@@ -179,6 +490,39 @@ function StudentDashboard({ user, onLogout }) {
   const [selectedAreaKey, setSelectedAreaKey] = useState('natureza'); // área ativa da BNCC
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+
+  // Progresso individual por disciplina na trilha
+  const [trailProgress, setTrailProgress] = useState(() => {
+    try {
+      const saved = localStorage.getItem('progressed_trail_progress');
+      return saved ? JSON.parse(saved) : { linguagens: 3, matematica: 2, natureza: 4, humanas: 2, simulado: 1 };
+    } catch (_) {
+      return { linguagens: 3, matematica: 2, natureza: 4, humanas: 2, simulado: 1 };
+    }
+  });
+
+  // Baús de recompensas resgatados
+  const [openedChests, setOpenedChests] = useState(() => {
+    try {
+      const saved = localStorage.getItem('progressed_opened_chests');
+      return saved ? JSON.parse(saved) : {};
+    } catch (_) {
+      return {};
+    }
+  });
+
+  // Histórico anti-repetição de questões respondidas
+  const [answeredChallengeIds, setAnsweredChallengeIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem('progressed_answered_ids');
+      return saved ? JSON.parse(saved) : [];
+    } catch (_) {
+      return [];
+    }
+  });
+
+  // Etapa ativa sendo jogada
+  const [currentActiveStage, setCurrentActiveStage] = useState(null);
 
   // Filtros da tela de ranking
   const [rankingScope, setRankingScope] = useState('escola'); // 'global' | 'escola'
@@ -291,39 +635,146 @@ function StudentDashboard({ user, onLogout }) {
   const unreadCount = notifications.filter(n => n.unread).length;
 
   // --------------------------------------------------------------------------
-  // INICIALIZAÇÃO DE DESAFIOS (DUOLINGO & PERGUNTADOS)
+  // MECÂNICA DINÂMICA DE ETAPAS DA TRILHA & SELEÇÃO INTELIGENTE DE QUESTÕES
   // --------------------------------------------------------------------------
-  const handleStartAreaQuiz = (areaKey, nodeIndex = 1) => {
+  const getOffsetClass = (idx) => {
+    const seq = ['offset-center', 'offset-left', 'offset-center', 'offset-right'];
+    return seq[idx % seq.length];
+  };
+
+  const advanceStageProgress = (areaKey, nextStageId) => {
+    setTrailProgress(prev => {
+      const maxStage = (BNCC_TRAIL_STAGES[areaKey] || []).length;
+      const updated = {
+        ...prev,
+        [areaKey]: Math.min(nextStageId, maxStage)
+      };
+      try {
+        localStorage.setItem('progressed_trail_progress', JSON.stringify(updated));
+      } catch (_) {}
+      return updated;
+    });
+  };
+
+  const handleNodeClick = (stage) => {
     playClickSound();
-    let filtered = [];
+    const currentStageIndex = trailProgress[selectedAreaKey] || 1;
+    const currentAreaConfig = BNCC_AREAS.find(a => a.key === selectedAreaKey);
 
-    if (areaKey === 'simulado') {
-      filtered = [...challenges].sort(() => 0.5 - Math.random()).slice(0, 10);
-      setCurrentTrack({ name: 'Simulado Geral BNCC (ENEM)', icon: '🎯', subtitle: '10 Questões Multidisciplinares' });
-      setQuizMode('simulado');
-    } else {
-      const currentArea = BNCC_AREAS.find(a => a.key === areaKey);
-      filtered = challenges.filter(c => {
-        if (areaKey === 'natureza') return c.subject === 'Ciências da Natureza' || c.subject === 'Física' || c.subject === 'Química' || c.subject === 'Biologia';
-        if (areaKey === 'linguagens') return c.subject === 'Linguagens' || c.subject === 'Português' || c.subject === 'Inglês' || c.subject === 'Literatura';
-        if (areaKey === 'matematica') return c.subject === 'Matemática';
-        if (areaKey === 'humanas') return c.subject === 'Ciências Humanas' || c.subject === 'História' || c.subject === 'Geografia';
-        return true;
-      });
-
-      if (filtered.length === 0) {
-        filtered = challenges.slice(0, 5);
+    // Nó do Baú de Recompensa
+    if (stage.type === 'chest') {
+      if (stage.id > currentStageIndex) {
+        alert(`🔒 Baú Bloqueado: Conclua as etapas anteriores de ${currentAreaConfig?.shortName || 'Trilha'} para abrir este baú!`);
+        return;
       }
-
-      setCurrentTrack({
-        name: `${currentArea?.name || 'Trilha'} - Missão #${nodeIndex}`,
-        icon: currentArea?.icon || '📖',
-        subtitle: currentArea?.subtitle || 'Competências Curriculares BNCC'
+      const chestKey = `${selectedAreaKey}_${stage.id}`;
+      if (openedChests[chestKey]) {
+        alert(`🎁 Baú já aberto: Você já resgatou os +${stage.bonusXp || 100} XP desta etapa.`);
+        return;
+      }
+      playLevelUpSound();
+      const bonus = stage.bonusXp || 100;
+      const newXp = (currentUser.xp || 420) + bonus;
+      const newLevel = Math.floor(newXp / LEVEL_XP) + 1;
+      const updated = { ...currentUser, xp: newXp, level: newLevel };
+      setCurrentUser(updated);
+      localStorage.setItem('user', JSON.stringify(updated));
+      setOpenedChests(prev => {
+        const next = { ...prev, [chestKey]: true };
+        try {
+          localStorage.setItem('progressed_opened_chests', JSON.stringify(next));
+        } catch (_) {}
+        return next;
       });
-      setQuizMode('track');
+      alert(`🎉 BAÚ DE RECOMPENSAS DESBLOQUEADO!\n\nVocê ganhou +${bonus} XP!\n\n💡 Dica BNCC: ${stage.subtitle}`);
+      if (stage.id === currentStageIndex) {
+        advanceStageProgress(selectedAreaKey, stage.id + 1);
+      }
+      return;
     }
 
-    setActiveQuizList(filtered.slice(0, 5));
+    // Nó Bloqueado
+    if (stage.id > currentStageIndex) {
+      const currentAreaStages = BNCC_TRAIL_STAGES[selectedAreaKey] || [];
+      const activeStageObj = currentAreaStages.find(s => s.id === currentStageIndex);
+      alert(`🔒 Etapa Bloqueada: Conclua a Etapa ${currentStageIndex} ("${activeStageObj?.title || 'Missão Atual'}") para desbloquear!`);
+      return;
+    }
+
+    // Inicia o Quiz desta etapa específica
+    handleStartStageQuiz(selectedAreaKey, stage);
+  };
+
+  const handleStartStageQuiz = (areaKey, stage) => {
+    playClickSound();
+
+    // 1. Filtrar desafios pertencentes a esta grande área
+    let areaChallenges = challenges.filter(c => {
+      if (areaKey === 'linguagens') {
+        return ['Português', 'Literatura', 'Inglês', 'Artes', 'Educação Física', 'Linguagens'].includes(c.subject) || c.moduleId === 1;
+      }
+      if (areaKey === 'matematica') {
+        return c.subject === 'Matemática' || c.moduleId === 2;
+      }
+      if (areaKey === 'natureza') {
+        return ['Física', 'Química', 'Biologia', 'Ciências da Natureza'].includes(c.subject) || c.moduleId === 3;
+      }
+      if (areaKey === 'humanas') {
+        return ['História', 'Geografia', 'Filosofia', 'Sociologia', 'Ciências Humanas'].includes(c.subject) || c.moduleId === 4;
+      }
+      if (areaKey === 'simulado') {
+        return true;
+      }
+      return true;
+    });
+
+    if (areaChallenges.length === 0) {
+      areaChallenges = challenges;
+    }
+
+    // 2. Pontuar desafios por afinidade com os keywords desta etapa específica
+    const stageKeywords = stage.keywords || [];
+    const scored = areaChallenges.map(c => {
+      let score = 0;
+      const searchString = `${c.title || ''} ${c.question || ''} ${c.subject || ''}`.toLowerCase();
+      
+      for (const kw of stageKeywords) {
+        if (searchString.includes(kw.toLowerCase())) {
+          score += 25;
+        }
+      }
+
+      // Se for Boss ou Simulado Geral, diversifica entre todas as questões
+      if (stage.type === 'boss') {
+        score += 10;
+      }
+
+      // Sistema Anti-Repetição: Prioriza fortemente questões ainda não respondidas
+      if (!answeredChallengeIds.includes(c.id)) {
+        score += 50;
+      }
+
+      return { ...c, score };
+    });
+
+    // Ordena decrescente pelo score e aplica sorteio para variedade contínua
+    scored.sort((a, b) => b.score - a.score || (0.5 - Math.random()));
+
+    // Quantidade de questões por sessão:
+    // Simulado Geral ENEM: 10 questões
+    // Desafio Mestre (Boss): 6 questões
+    // Etapa regular: 4 questões
+    const qCount = areaKey === 'simulado' && stage.type === 'boss' ? 10 : stage.type === 'boss' ? 6 : 4;
+    const selectedQuestions = scored.slice(0, qCount);
+
+    setCurrentActiveStage(stage);
+    setCurrentTrack({
+      name: `${stage.title}`,
+      icon: stage.icon,
+      subtitle: `${stage.subtitle} • ${BNCC_AREAS.find(a => a.key === areaKey)?.name || 'BNCC'}`
+    });
+    setQuizMode(areaKey === 'simulado' && stage.type === 'boss' ? 'simulado' : 'track');
+    setActiveQuizList(selectedQuestions);
     setCurrentIndex(0);
     setTimeLeft(30);
     setTimerPaused(false);
@@ -338,16 +789,29 @@ function StudentDashboard({ user, onLogout }) {
     playClickSound();
     if (challenges.length === 0) return;
 
-    const randomQ = challenges[Math.floor(Math.random() * challenges.length)];
-    setCurrentTrack({
-      name: '⚡ Desafio Relâmpago (Perguntados)',
+    // Prioriza questões ainda não respondidas de qualquer matéria
+    const unAnswered = challenges.filter(c => !answeredChallengeIds.includes(c.id));
+    const pool = unAnswered.length > 0 ? unAnswered : challenges;
+    const randomQ = pool[Math.floor(Math.random() * pool.length)];
+
+    const quickStage = {
+      id: 99,
+      title: `⚡ Desafio Relâmpago em ${randomQ.subject}`,
+      subtitle: `Questão Surpresa da BNCC • +20 XP Bônus`,
       icon: '⚡',
-      subtitle: `Questão Surpresa em ${randomQ.subject} • +20 XP Bônus`
+      type: 'challenge'
+    };
+
+    setCurrentActiveStage(quickStage);
+    setCurrentTrack({
+      name: quickStage.title,
+      icon: '⚡',
+      subtitle: quickStage.subtitle
     });
     setQuizMode('track');
     setActiveQuizList([randomQ]);
     setCurrentIndex(0);
-    setTimeLeft(20);
+    setTimeLeft(25);
     setTimerPaused(false);
     setTimeExpired(false);
     setDisabled(false);
@@ -359,6 +823,15 @@ function StudentDashboard({ user, onLogout }) {
   const handleChallengeSubmit = async (challengeId, answer) => {
     setTimerPaused(true);
     setDisabled(true);
+
+    // Registra ID da questão no histórico anti-repetição
+    setAnsweredChallengeIds(prev => {
+      const next = [...new Set([...prev, challengeId])];
+      try {
+        localStorage.setItem('progressed_answered_ids', JSON.stringify(next.slice(-80)));
+      } catch (_) {}
+      return next;
+    });
 
     const currentQ = activeQuizList[currentIndex];
     const isCorrect = currentQ && (answer || '').toUpperCase() === currentQ.correctAnswer;
@@ -403,7 +876,12 @@ function StudentDashboard({ user, onLogout }) {
       if (quizMode === 'simulado') {
         setViewMode('simulado_result');
       } else {
-        alert('🎉 Missão da Trilha Concluída com Sucesso! Você dominou esta competência da BNCC.');
+        // Se a etapa concluída era a etapa ativa atual, avança para a próxima etapa na trilha!
+        const currentActiveStageIndex = trailProgress[selectedAreaKey] || 1;
+        if (currentActiveStage && currentActiveStage.id >= currentActiveStageIndex) {
+          advanceStageProgress(selectedAreaKey, currentActiveStage.id + 1);
+        }
+        alert(`🎉 Parabéns! Você concluiu a etapa "${currentActiveStage?.title || 'Missão'}" com sucesso!\n\nVocê consolidou novas competências curriculares da BNCC.`);
         setViewMode('hub');
       }
     }
@@ -433,14 +911,14 @@ function StudentDashboard({ user, onLogout }) {
     return list.filter(item => item.name.toLowerCase().includes(rankingSearch.toLowerCase()));
   }, [currentUser, currentLevel, currentXp, rankingSearch]);
 
-  // Contagem de questões por disciplina
+  // Contagem real de questões por grande área curricular
   const countsByArea = useMemo(() => {
     return {
-      linguagens: challenges.filter(c => c.subject === 'Linguagens' || c.subject === 'Português' || c.subject === 'Inglês').length || 28,
-      matematica: challenges.filter(c => c.subject === 'Matemática').length || 32,
-      natureza: challenges.filter(c => c.subject === 'Ciências da Natureza' || c.subject === 'Física' || c.subject === 'Química' || c.subject === 'Biologia').length || 35,
-      humanas: challenges.filter(c => c.subject === 'Ciências Humanas' || c.subject === 'História' || c.subject === 'Geografia').length || 26,
-      simulado: 10
+      linguagens: challenges.filter(c => ['Português', 'Literatura', 'Inglês', 'Artes', 'Educação Física', 'Linguagens'].includes(c.subject) || c.moduleId === 1).length || 33,
+      matematica: challenges.filter(c => c.subject === 'Matemática' || c.moduleId === 2).length || 22,
+      natureza: challenges.filter(c => ['Física', 'Química', 'Biologia', 'Ciências da Natureza'].includes(c.subject) || c.moduleId === 3).length || 34,
+      humanas: challenges.filter(c => ['História', 'Geografia', 'Filosofia', 'Sociologia', 'Ciências Humanas'].includes(c.subject) || c.moduleId === 4).length || 33,
+      simulado: challenges.length || 131
     };
   }, [challenges]);
 
@@ -763,7 +1241,7 @@ function StudentDashboard({ user, onLogout }) {
               </div>
             </section>
 
-            {/* CAMINHO EM ZIGUE-ZAGUE ESTILO DUOLINGO */}
+            {/* CAMINHO EM ZIGUE-ZAGUE ESTILO DUOLINGO - DINÂMICO POR DISCIPLINA */}
             <section className="duolingo-trail-section">
               <div className="trail-section-header">
                 <div>
@@ -774,115 +1252,119 @@ function StudentDashboard({ user, onLogout }) {
                     {BNCC_AREAS.find(a => a.key === selectedAreaKey)?.subtitle} • Habilidade: {BNCC_AREAS.find(a => a.key === selectedAreaKey)?.competence}
                   </p>
                 </div>
-                <button
-                  className="btn-view-available-trails"
-                  onClick={() => handleStartAreaQuiz(selectedAreaKey, 5)}
-                >
-                  <span>🚀 Continuar Jornada</span>
-                </button>
+                {(() => {
+                  const currentStages = BNCC_TRAIL_STAGES[selectedAreaKey] || [];
+                  const currentStageIdx = trailProgress[selectedAreaKey] || 1;
+                  const activeStage = currentStages.find(s => s.id === currentStageIdx) || currentStages[0];
+                  return (
+                    <button
+                      className="btn-view-available-trails"
+                      onClick={() => activeStage && handleNodeClick(activeStage)}
+                    >
+                      <span>🚀 Continuar Jornada</span>
+                    </button>
+                  );
+                })()}
               </div>
 
-              {/* Nós Conectados em zigue-zague */}
+              {/* Nós Conectados em zigue-zague com base no currículo da matéria */}
               <div className="winding-path-container">
-                {/* Nó 1: Concluído */}
-                <div
-                  className="duolingo-level-node completed offset-center"
-                  onClick={() => handleStartAreaQuiz(selectedAreaKey, 1)}
-                  title="Missão 1: Conceitos Iniciais"
-                >
-                  <div className="node-circle-button">✓</div>
-                  <span className="node-title-badge">1. Fundamentos</span>
-                  <div className="node-stars-row">⭐⭐⭐</div>
-                </div>
+                {(BNCC_TRAIL_STAGES[selectedAreaKey] || []).map((stage, idx) => {
+                  const currentStageIdx = trailProgress[selectedAreaKey] || 1;
+                  const isCompleted = stage.id < currentStageIdx;
+                  const isActive = stage.id === currentStageIdx;
+                  const isLocked = stage.id > currentStageIdx;
+                  const offsetClass = getOffsetClass(idx);
 
-                {/* Nó 2: Concluído */}
-                <div
-                  className="duolingo-level-node completed offset-left"
-                  onClick={() => handleStartAreaQuiz(selectedAreaKey, 2)}
-                  title="Missão 2: Interpretação & Lógica"
-                >
-                  <div className="node-circle-button">✓</div>
-                  <span className="node-title-badge">2. Leitura Crítica</span>
-                  <div className="node-stars-row">⭐⭐⭐</div>
-                </div>
+                  // 1. Tipo: Baú de Recompensa
+                  if (stage.type === 'chest') {
+                    const chestKey = `${selectedAreaKey}_${stage.id}`;
+                    const isOpened = openedChests[chestKey];
+                    return (
+                      <div
+                        key={stage.id}
+                        className={`duolingo-level-node chest ${offsetClass} ${isOpened ? 'completed' : isLocked ? 'locked' : 'active'}`}
+                        onClick={() => handleNodeClick(stage)}
+                        title={isOpened ? 'Baú já resgatado!' : isLocked ? 'Complete as etapas anteriores para abrir' : 'Clique para abrir o Baú de Recompensas!'}
+                      >
+                        <div className="node-circle-button">
+                          {isOpened ? '✨' : '🎁'}
+                        </div>
+                        <span className="node-title-badge text-amber-300 font-bold">
+                          {stage.title}
+                        </span>
+                        <span className="text-[10px] font-extrabold mt-1 tracking-wider text-amber-400">
+                          {isOpened ? '✓ RESGATADO (+XP)' : isLocked ? '🔒 BLOQUEADO' : '🎁 ABRIR BAÚ (+100 XP)'}
+                        </span>
+                      </div>
+                    );
+                  }
 
-                {/* Nó 3: Concluído */}
-                <div
-                  className="duolingo-level-node completed offset-right"
-                  onClick={() => handleStartAreaQuiz(selectedAreaKey, 3)}
-                  title="Missão 3: Aplicação Prática"
-                >
-                  <div className="node-circle-button">✓</div>
-                  <span className="node-title-badge">3. Estruturas</span>
-                  <div className="node-stars-row">⭐⭐⭐</div>
-                </div>
+                  // 2. Tipo: Desafio Mestre / Boss Final da Trilha
+                  if (stage.type === 'boss') {
+                    return (
+                      <div
+                        key={stage.id}
+                        className={`duolingo-level-node ${isActive ? 'active' : isCompleted ? 'completed' : 'locked'} ${offsetClass}`}
+                        onClick={() => handleNodeClick(stage)}
+                        title={isCompleted ? `${stage.title} (Concluído)` : isActive ? `Desafio Mestre: ${stage.title}` : 'Complete as etapas anteriores'}
+                      >
+                        {isActive && (
+                          <div className="active-student-pin">
+                            <span>{selectedAvatarEmoji}</span>
+                            <span>VOCÊ ESTÁ AQUI</span>
+                          </div>
+                        )}
+                        <div className="node-circle-button">
+                          {isCompleted ? '🏆' : isActive ? (stage.icon || '👑') : '🔒'}
+                        </div>
+                        <span className={`node-title-badge ${isActive ? 'font-bold text-amber-300' : isCompleted ? 'text-emerald-400' : ''}`}>
+                          {stage.title}
+                        </span>
+                        {isCompleted && <div className="node-stars-row">⭐⭐⭐</div>}
+                        {isActive && (
+                          <span className="text-[10px] text-amber-400 font-extrabold mt-1 tracking-wider animate-pulse">
+                            🔥 DESAFIO MESTRE
+                          </span>
+                        )}
+                        {isLocked && (
+                          <span className="text-[10px] text-slate-500 font-medium mt-1">
+                            Etapa Final
+                          </span>
+                        )}
+                      </div>
+                    );
+                  }
 
-                {/* Nó 4: Concluído */}
-                <div
-                  className="duolingo-level-node completed offset-left"
-                  onClick={() => handleStartAreaQuiz(selectedAreaKey, 4)}
-                  title="Missão 4: Análise Conceitual"
-                >
-                  <div className="node-circle-button">✓</div>
-                  <span className="node-title-badge">4. Métodos</span>
-                  <div className="node-stars-row">⭐⭐⭐</div>
-                </div>
-
-                {/* Nó 5: NÓ ATIVO ONDE O ALUNO ESTÁ POSICIONADO! */}
-                <div
-                  className="duolingo-level-node active offset-center"
-                  onClick={() => handleStartAreaQuiz(selectedAreaKey, 5)}
-                  title="Clique para iniciar o desafio atual!"
-                >
-                  {/* Pin do Aluno em pé sobre o nó */}
-                  <div className="active-student-pin">
-                    <span>{selectedAvatarEmoji}</span>
-                    <span>VOCÊ ESTÁ AQUI</span>
-                  </div>
-                  <div className="node-circle-button">
-                    🧠
-                  </div>
-                  <span className="node-title-badge font-bold text-sky-300">5. Missão Atual (Desafios do Banco)</span>
-                  <span className="text-[10px] text-sky-400 font-extrabold mt-1 tracking-wider">CLIQUE PARA JOGAR</span>
-                </div>
-
-                {/* Nó 6: Baú de Tesouro / Recompensa Milestone */}
-                <div
-                  className="duolingo-level-node chest offset-right"
-                  onClick={() => alert('🎁 Baú de Recompensa: Complete a Missão 5 para abrir e receber +100 XP e dicas exclusivas da BNCC!')}
-                  title="Baú de Tesouro BNCC"
-                >
-                  <div className="node-circle-button">🎁</div>
-                  <span className="node-title-badge text-amber-300 font-bold">Recompensa Bônus</span>
-                </div>
-
-                {/* Nó 7: Trancado */}
-                <div
-                  className="duolingo-level-node locked offset-left"
-                  onClick={() => alert('🔒 Etapa Bloqueada: Vença a Missão 5 para desbloquear!')}
-                >
-                  <div className="node-circle-button">🔒</div>
-                  <span className="node-title-badge">6. Análise Crítica</span>
-                </div>
-
-                {/* Nó 8: Trancado */}
-                <div
-                  className="duolingo-level-node locked offset-center"
-                  onClick={() => alert('🔒 Etapa Bloqueada')}
-                >
-                  <div className="node-circle-button">🔒</div>
-                  <span className="node-title-badge">7. Raciocínio Avançado</span>
-                </div>
-
-                {/* Nó 9: Troféu Final */}
-                <div
-                  className="duolingo-level-node chest offset-center"
-                  onClick={() => handleStartAreaQuiz('simulado')}
-                  title="Projeto Final / Simulado ENEM"
-                >
-                  <div className="node-circle-button">🏆</div>
-                  <span className="node-title-badge font-bold text-amber-300">Desafio Final ENEM</span>
-                </div>
+                  // 3. Etapa Regular de Conteúdo Curricular
+                  return (
+                    <div
+                      key={stage.id}
+                      className={`duolingo-level-node ${isActive ? 'active' : isCompleted ? 'completed' : 'locked'} ${offsetClass}`}
+                      onClick={() => handleNodeClick(stage)}
+                      title={`Etapa ${stage.id}: ${stage.title} - ${stage.subtitle}`}
+                    >
+                      {isActive && (
+                        <div className="active-student-pin">
+                          <span>{selectedAvatarEmoji}</span>
+                          <span>VOCÊ ESTÁ AQUI</span>
+                        </div>
+                      )}
+                      <div className="node-circle-button">
+                        {isCompleted ? '✓' : isActive ? (stage.icon || '🧠') : '🔒'}
+                      </div>
+                      <span className={`node-title-badge ${isActive ? 'font-bold text-sky-300' : ''}`}>
+                        {stage.id}. {stage.title}
+                      </span>
+                      {isCompleted && <div className="node-stars-row">⭐⭐⭐</div>}
+                      {isActive && (
+                        <span className="text-[10px] text-sky-400 font-extrabold mt-1 tracking-wider">
+                          CLIQUE PARA JOGAR
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </section>
 
