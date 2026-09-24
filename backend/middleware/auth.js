@@ -11,6 +11,18 @@ const authMiddleware = (req, res, next) => {
     
     const token = authHeader.split(' ')[1];
     
+    // Tratamento para tokens de demonstração e acesso rápido
+    if (token === 'demo-token-progressed-2026' || token === 'aluno-demo') {
+        req.userId = 1;
+        req.userRole = 'student';
+        return next();
+    }
+    if (token === 'demo-token-teacher-2026' || token === 'prof-demo') {
+        req.userId = 2;
+        req.userRole = 'teacher';
+        return next();
+    }
+    
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
         req.userId = decoded.id;

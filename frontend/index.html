@@ -28,6 +28,19 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     <script>
+      // Limpeza imediata de caches de versões antigas no navegador do usuário
+      try {
+        if ('caches' in window) {
+          caches.keys().then(names => {
+            names.forEach(name => {
+              if (name !== 'progressed-v3-stable') {
+                caches.delete(name);
+              }
+            });
+          });
+        }
+      } catch (_) {}
+
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/service-worker.js')

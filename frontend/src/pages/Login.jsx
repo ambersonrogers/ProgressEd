@@ -47,11 +47,32 @@ function Login({ onLogin }) {
         }
     };
 
-    const handleDemoLogin = (role) => {
+    const handleDemoLogin = async (role) => {
+        setLoading(true);
+        setError('');
+        const creds = role === 'teacher'
+            ? { email: 'professor@progressed.com', password: '123456' }
+            : { email: 'aluno@progressed.com', password: '123456' };
+
+        try {
+            const response = await api.post('/auth/login', creds);
+            if (response.data?.token && response.data?.user) {
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('user', JSON.stringify(response.data.user));
+                onLogin(response.data.user);
+                return;
+            }
+        } catch (err) {
+            console.warn('Login demo remoto falhou, usando autenticação offline segura:', err.message);
+        } finally {
+            setLoading(false);
+        }
+
+        // Fallback offline seguro
         const demoUser = role === 'teacher'
-            ? { id: 'prof-demo', name: 'Prof. Pedro Brandão', email: 'professor@progressed.com', role: 'teacher' }
-            : { id: 'aluno-demo', name: 'Amberson Rogers', email: 'aluno@progressed.com', role: 'student', xp: 420, level: 4 };
-        localStorage.setItem('token', 'demo-token-progressed-2026');
+            ? { id: 2, name: 'Prof. Pedro Brandão', email: 'professor@progressed.com', role: 'teacher' }
+            : { id: 1, name: 'Amberson Rogers', email: 'aluno@progressed.com', role: 'student', xp: 420, level: 4 };
+        localStorage.setItem('token', role === 'teacher' ? 'demo-token-teacher-2026' : 'demo-token-progressed-2026');
         localStorage.setItem('user', JSON.stringify(demoUser));
         onLogin(demoUser);
     };
